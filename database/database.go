@@ -12,7 +12,9 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func Init() *gorm.DB {
+var DB *gorm.DB
+
+func Init() {
 	err := godotenv.Load(".env")
 
 	if err != nil {
@@ -26,7 +28,7 @@ func Init() *gorm.DB {
 	dbname := os.Getenv("DB_NAME")
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", dbHost, dbUser, dbPassword, dbname, dbPort)
-	DB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
 		log.Println("Successfully connected to database")
@@ -34,7 +36,11 @@ func Init() *gorm.DB {
 	}
 
 	log.Println("Successfully connected to database")
+
 	DB.AutoMigrate(&models.Drink{})
 	fmt.Println("Database Migrated")
+}
+
+func GetDBInstance() *gorm.DB {
 	return DB
 }
