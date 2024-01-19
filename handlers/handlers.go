@@ -41,10 +41,9 @@ func GetAllDrinks(c *fiber.Ctx) error {
 func GetDrinkByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	db := database.GetDBInstance()
 	var drink models.Drink
 
-	result := db.Find(&drink, "id = ?", id)
+	result := database.DB.Find(&drink, "id = ?", id)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -59,4 +58,28 @@ func GetDrinkByID(c *fiber.Ctx) error {
 		})
 	}
 	return c.JSON(&drink)
+}
+
+func GetAllMembers(c *fiber.Ctx) error {
+	var members []models.Member
+
+	result := database.DB.Find(&members)
+
+	if result.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when querying database",
+		})
+	}
+	if result.RowsAffected == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"err":     false,
+			"message": "no data",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"err":  false,
+		"data": members,
+	})
 }
