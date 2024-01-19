@@ -8,10 +8,10 @@ import (
 )
 
 func main() {
-	db := database.Init()
+	database.Init()
 
 	app := fiber.New()
-	router.SetupRoutes(app, db)
+	router.SetupRoutes(app)
 
 	app.Listen(":8080")
 }
