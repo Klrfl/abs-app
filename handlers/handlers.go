@@ -5,13 +5,22 @@ import (
 	"abs-app/models"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 func GetAllDrinks(c *fiber.Ctx) error {
+	queries := c.Queries()
+
 	db := database.GetDBInstance()
 	var drinks []models.Drink
 
-	result := db.Find(&drinks)
+	var result *gorm.DB
+
+	if queries["name"] != "" {
+		result = db.Where("drink_name ILIKE ?", "%"+queries["name"]+"%").Find(&drinks)
+	} else {
+		result = db.Find(&drinks)
+	}
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
