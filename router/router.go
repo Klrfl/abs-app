@@ -15,6 +15,9 @@ func SetupRoutes(app *fiber.App) {
 
 	menuRoute.Get("/", handlers.GetAllDrinks)
 	menuRoute.Get("/:id", handlers.GetDrinkByID)
+	menuRoute.Post("/", handlers.CreateNewDrink)
+	menuRoute.Patch("/:id", handlers.UpdateDrink)
+	menuRoute.Delete("/:id", handlers.DeleteDrink)
 
 	memberRoute := app.Group("/members")
 	memberRoute.Get("/", handlers.GetAllMembers)

@@ -9,6 +9,31 @@ import (
 	"gorm.io/gorm"
 )
 
+func CreateNewDrink(c *fiber.Ctx) error {
+	var newDrink models.Drink
+
+	if err := c.BodyParser(&newDrink); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "something wrong with new drink data",
+		})
+	}
+
+	result := database.DB.Save(&newDrink)
+
+	if result.Error != nil {
+		return c.JSON(fiber.Map{
+			"err":     true,
+			"message": "error when querying database",
+		})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"err":     false,
+		"message": "new drink successfully created",
+	})
+}
+
 func GetAllDrinks(c *fiber.Ctx) error {
 	queries := c.Queries()
 
@@ -59,6 +84,26 @@ func GetDrinkByID(c *fiber.Ctx) error {
 		})
 	}
 	return c.JSON(&drink)
+}
+
+func DeleteDrink(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	type Drink models.Drink
+
+	result := database.DB.Where("id = ?", id).Delete(&Drink{})
+
+	if result.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when querying database",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"err":     false,
+		"message": "drink successfully deleted",
+	})
 }
 
 func GetAllMembers(c *fiber.Ctx) error {
