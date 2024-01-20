@@ -16,10 +16,10 @@ func GetAllDrinks(c *fiber.Ctx) error {
 
 	var result *gorm.DB
 
-	if queries["name"] != "" {
-		result = db.Where("drink_name ILIKE ?", "%"+queries["name"]+"%").Find(&drinks)
+	if queries["drink_name"] != "" {
+		result = db.Where("drink_name ILIKE ?", fmt.Sprintf("%%%s%%", queries["drink_name"])).Find(&drinks)
 	} else {
-		result = db.Find(&drinks)
+		result = db.Where(queries).Find(&drinks)
 	}
 
 	if result.Error != nil {
