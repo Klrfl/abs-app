@@ -18,4 +18,7 @@ func SetupRoutes(app *fiber.App) {
 
 	memberRoute := app.Group("/members")
 	memberRoute.Get("/", handlers.GetAllMembers)
+
+	ordersRoute := app.Group("/orders")
+	ordersRoute.Get("/", handlers.GetAllOrders)
 }
