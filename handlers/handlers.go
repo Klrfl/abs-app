@@ -37,15 +37,14 @@ func CreateNewDrink(c *fiber.Ctx) error {
 func GetAllDrinks(c *fiber.Ctx) error {
 	queries := c.Queries()
 
-	db := database.GetDBInstance()
 	var drinks []models.Drink
 
 	var result *gorm.DB
 
 	if queries["drink_name"] != "" {
-		result = db.Where("drink_name ILIKE ?", fmt.Sprintf("%%%s%%", queries["drink_name"])).Find(&drinks)
+		result = database.DB.Where("drink_name ILIKE ?", fmt.Sprintf("%%%s%%", queries["drink_name"])).Find(&drinks)
 	} else {
-		result = db.Where(queries).Find(&drinks)
+		result = database.DB.Where(queries).Find(&drinks)
 	}
 
 	if result.Error != nil {

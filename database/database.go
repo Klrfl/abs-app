@@ -40,7 +40,3 @@ func Init() {
 	DB.AutoMigrate(&models.Drink{})
 	fmt.Println("Database Migrated")
 }
-
-func GetDBInstance() *gorm.DB {
-	return DB
-}
