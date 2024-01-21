@@ -67,11 +67,18 @@ func GetAllDrinks(c *fiber.Ctx) error {
 }
 
 func GetDrinkByID(c *fiber.Ctx) error {
-	id := c.Params("id")
+	id, err := uuid.Parse(c.Params("id"))
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when parsing drink id",
+		})
+	}
 
 	var drink models.Drink
 
-	result := database.DB.Find(&drink, "id = ?", id)
+	result := database.DB.First(&drink, "id = ?", id)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
