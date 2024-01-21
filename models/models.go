@@ -17,14 +17,14 @@ type Drink struct {
 }
 
 type Member struct {
-	Id          uuid.UUID `json:"id" gorm:"primaryKey" gorm:"type:uuid"`
+	Id          uuid.UUID `json:"id" gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
 	Member_name string    `json:"member_name"`
 	Created_at  time.Time `json:"created_at" gorm:"default:now()"`
 	Updated_at  time.Time `json:"updated_at" gorm:"default:now()"`
 }
 
 type Order struct {
-	Id          uuid.UUID `json:"id" gorm:"primaryKey" gorm:"type:uuid"`
+	Id          uuid.UUID `json:"id" gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
 	Member_name string    `json:"member_name"`
 	Drink_name  *string   `json:"drink_name"`
 	Drink_type  *string   `json:"drink_type"`
