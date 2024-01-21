@@ -4,8 +4,11 @@ import (
 	"abs-app/database"
 	"abs-app/models"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -83,6 +86,51 @@ func GetDrinkByID(c *fiber.Ctx) error {
 		})
 	}
 	return c.JSON(&drink)
+}
+
+func UpdateDrink(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	id, err := uuid.Parse(c.Params("id"))
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "error parsing ID",
+		})
+	}
+
+	drink := new(models.Drink)
+
+	if err := c.BodyParser(drink); err != nil {
+		log.Println(err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "something wrong with the drink data",
+		})
+	}
+
+	drink.Id = id
+	drink.Updated_at = time.Now()
+	result := database.DB.Save(&drink)
+
+	if result.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when querying database",
+		})
+	}
+
+	if result.RowsAffected == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"err":     false,
+			"message": "no drink found",
+		})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"err":     false,
+		"message": "Drink data successfully updated",
+	})
 }
 
 func DeleteDrink(c *fiber.Ctx) error {
