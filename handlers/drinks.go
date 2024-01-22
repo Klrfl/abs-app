@@ -37,7 +37,7 @@ func CreateNewDrink(c *fiber.Ctx) error {
 	})
 }
 
-func GetAllDrinks(c *fiber.Ctx) error {
+func GetDrinks(c *fiber.Ctx) error {
 	queries := c.Queries()
 
 	var drinks []models.Drink

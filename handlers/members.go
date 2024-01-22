@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func GetAllMembers(c *fiber.Ctx) error {
+func GetMembers(c *fiber.Ctx) error {
 	var members []models.Member
 
 	result := database.DB.Find(&members)
