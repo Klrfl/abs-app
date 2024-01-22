@@ -23,6 +23,13 @@ type Member struct {
 	Updated_at  time.Time `json:"updated_at" gorm:"default:now()"`
 }
 
+type BaseOrder struct {
+	Id         uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+	Member_id  uuid.UUID `json:"member_id"`
+	Drink_id   uuid.UUID `json:"drink_id"`
+	Created_at time.Time `json:"created_at" gorm:"default:now()"`
+}
+
 type Order struct {
 	Id          uuid.UUID `json:"id" gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
 	Member_name string    `json:"member_name"`

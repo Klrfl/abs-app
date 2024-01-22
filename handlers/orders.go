@@ -89,3 +89,28 @@ func GetOrderByID(c *fiber.Ctx) error {
 		"data": order,
 	})
 }
+
+func CreateNewOrder(c *fiber.Ctx) error {
+	newOrder := new(models.BaseOrder)
+
+	if err := c.BodyParser(newOrder); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "something wrong with your request body",
+		})
+	}
+
+	result := database.DB.Table("orders").Save(&newOrder)
+
+	if result.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when querying database",
+		})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"err":     false,
+		"message": "new order successfully created",
+	})
+}

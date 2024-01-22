@@ -29,4 +29,5 @@ func SetupRoutes(app *fiber.App) {
 	ordersRoute := app.Group("/orders")
 	ordersRoute.Get("/", handlers.GetOrders)
 	ordersRoute.Get("/:id", handlers.GetOrderByID)
+	ordersRoute.Post("/", handlers.CreateNewOrder)
 }
