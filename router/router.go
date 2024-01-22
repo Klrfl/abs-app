@@ -27,5 +27,6 @@ func SetupRoutes(app *fiber.App) {
 	memberRoute.Delete("/:id", handlers.DeleteMember)
 
 	ordersRoute := app.Group("/orders")
-	ordersRoute.Get("/", handlers.GetAllOrders)
+	ordersRoute.Get("/", handlers.GetOrders)
+	ordersRoute.Get("/:id", handlers.GetOrderByID)
 }

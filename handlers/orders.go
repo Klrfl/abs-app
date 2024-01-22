@@ -5,12 +5,34 @@ import (
 	"abs-app/models"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
-func GetAllOrders(c *fiber.Ctx) error {
+func GetOrders(c *fiber.Ctx) error {
+	var id uuid.UUID
+	var err error
+
 	var orders []models.Order
 
-	result := database.DB.Table("orders").Joins("join members on orders.member_id=members.id join drinks on orders.drink_id=drinks.id").Select("orders.id, members.member_name, drinks.drink_name, drinks.drink_type, drinks.hot_price, drinks.cold_price, orders.created_at").Find(&orders)
+	joinQueryString := "join members on orders.member_id=members.id join drinks on orders.drink_id=drinks.id"
+	selectQueryString := "orders.id, members.member_name, drinks.drink_name, drinks.drink_type, drinks.hot_price, drinks.cold_price, orders.created_at"
+	var result *gorm.DB
+
+	if c.Query("member_id") != "" {
+		id, err = uuid.Parse(c.Query("member_id"))
+
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"err":     true,
+				"message": "error when processing member id`",
+			})
+		}
+
+		result = database.DB.Table("orders").Joins(joinQueryString).Select(selectQueryString).Where("members.id = ?", id).Find(&orders)
+	} else {
+		result = database.DB.Table("orders").Joins(joinQueryString).Select(selectQueryString).Find(&orders)
+	}
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -30,5 +52,40 @@ func GetAllOrders(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"err":  false,
 		"data": orders,
+	})
+}
+
+func GetOrderByID(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when processing order id",
+		})
+	}
+
+	order := new(models.Order)
+	joinQueryString := "join members on orders.member_id=members.id join drinks on orders.drink_id=drinks.id"
+	selectQueryString := "orders.id, members.member_name, drinks.drink_name, drinks.drink_type, drinks.hot_price, drinks.cold_price, orders.created_at"
+	result := database.DB.Joins(joinQueryString).Select(selectQueryString).Where("orders.id = ?", id).Find(&order)
+
+	if result.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when querying database",
+		})
+	}
+
+	if result.RowsAffected == 0 {
+		return c.JSON(fiber.Map{
+			"err":     false,
+			"message": "no data",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"err":  false,
+		"data": order,
 	})
 }
