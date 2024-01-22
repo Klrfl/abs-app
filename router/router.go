@@ -24,6 +24,7 @@ func SetupRoutes(app *fiber.App) {
 	memberRoute.Get("/:id", handlers.GetMemberByID)
 	memberRoute.Post("/", handlers.CreateNewMember)
 	memberRoute.Patch("/:id", handlers.UpdateMemberData)
+	memberRoute.Delete("/:id", handlers.DeleteMember)
 
 	ordersRoute := app.Group("/orders")
 	ordersRoute.Get("/", handlers.GetAllOrders)

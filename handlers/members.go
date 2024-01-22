@@ -95,3 +95,29 @@ func UpdateMemberData(c *fiber.Ctx) error {
 		"message": "member data successfully updated",
 	})
 }
+
+func DeleteMember(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when parsing member id",
+		})
+	}
+
+	member := new(models.Member)
+	result := database.DB.Where("id = ?", id).Delete(member)
+
+	if result.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when querying database",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"err":     false,
+		"message": "member successfully deleted",
+	})
+}
