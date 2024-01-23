@@ -10,14 +10,15 @@ import (
 	"gorm.io/gorm"
 )
 
+var joinQueryString string = "join members on orders.member_id=members.id join drinks on orders.drink_id=drinks.id"
+var selectQueryString string = "orders.id, members.member_name, drinks.drink_name, drinks.drink_type, drinks.hot_price, drinks.cold_price, orders.is_completed, orders.created_at"
+
 func GetOrders(c *fiber.Ctx) error {
 	var id uuid.UUID
 	var err error
 
 	var orders []models.Order
 
-	joinQueryString := "join members on orders.member_id=members.id join drinks on orders.drink_id=drinks.id"
-	selectQueryString := "orders.id, members.member_name, drinks.drink_name, drinks.drink_type, drinks.hot_price, drinks.cold_price, orders.created_at"
 	var result *gorm.DB
 
 	if c.Query("member_id") != "" {
@@ -67,8 +68,6 @@ func GetOrderByID(c *fiber.Ctx) error {
 	}
 
 	order := new(models.Order)
-	joinQueryString := "join members on orders.member_id=members.id join drinks on orders.drink_id=drinks.id"
-	selectQueryString := "orders.id, members.member_name, drinks.drink_name, drinks.drink_type, drinks.hot_price, drinks.cold_price, orders.created_at"
 	result := database.DB.Joins(joinQueryString).Select(selectQueryString).Where("orders.id = ?", id).Find(&order)
 
 	if result.Error != nil {
