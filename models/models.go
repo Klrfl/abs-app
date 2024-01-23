@@ -24,12 +24,12 @@ type Member struct {
 }
 
 type BaseOrder struct {
-	Id           uuid.UUID  `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	Member_id    uuid.UUID  `gorm:"type:uuid"`
-	Drink_id     uuid.UUID  `gorm:"type:uuid"`
-	Created_at   time.Time  `gorm:"default:now()"`
-	Is_completed bool       `gorm:"default:false"`
-	Completed_at *time.Time `gorm:"default:null"`
+	Id           uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+	Member_id    uuid.UUID `gorm:"type:uuid"`
+	Drink_id     uuid.UUID `gorm:"type:uuid"`
+	Created_at   time.Time `gorm:"default:now()"`
+	Is_completed bool      `gorm:"default:false"`
+	Completed_at time.Time `gorm:"default:null"`
 }
 
 type Order struct {
