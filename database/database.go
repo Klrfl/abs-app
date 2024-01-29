@@ -38,6 +38,6 @@ func Init() {
 	log.Println("Successfully connected to database")
 
 	type order models.BaseOrder
-	DB.AutoMigrate(&models.Drink{}, &order{}, &models.Member{})
+	DB.AutoMigrate(&models.BaseMenu{}, &order{}, &models.Member{})
 	fmt.Println("Database Migrated")
 }

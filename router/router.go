@@ -11,13 +11,13 @@ import (
 func SetupRoutes(app *fiber.App) {
 	app.Use(logger.New())
 	app.Use(cors.New())
-	menuRoute := app.Group("/drinks")
+	menuRoute := app.Group("/menu")
 
-	menuRoute.Get("/", handlers.GetDrinks)
-	menuRoute.Get("/:id", handlers.GetDrinkByID)
-	menuRoute.Post("/", handlers.CreateNewDrink)
-	menuRoute.Patch("/:id", handlers.UpdateDrink)
-	menuRoute.Delete("/:id", handlers.DeleteDrink)
+	menuRoute.Get("/", handlers.GetMenu)
+	menuRoute.Get("/:id", handlers.GetMenuItemByID)
+	menuRoute.Post("/", handlers.CreateNewMenuItem)
+	menuRoute.Patch("/:id", handlers.UpdateMenuItem)
+	menuRoute.Delete("/:id", handlers.DeleteMenuItem)
 
 	memberRoute := app.Group("/members")
 	memberRoute.Get("/", handlers.GetMembers)

@@ -12,17 +12,17 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateNewDrink(c *fiber.Ctx) error {
-	var newDrink models.Drink
+func CreateNewMenuItem(c *fiber.Ctx) error {
+	var newMenuItem models.BaseMenu
 
-	if err := c.BodyParser(&newDrink); err != nil {
+	if err := c.BodyParser(&newMenuItem); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
 			"message": "something wrong with new drink data",
 		})
 	}
 
-	result := database.DB.Save(&newDrink)
+	result := database.DB.Save(&newMenuItem)
 
 	if result.Error != nil {
 		return c.JSON(fiber.Map{
@@ -33,21 +33,26 @@ func CreateNewDrink(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"err":     false,
-		"message": "new drink successfully created",
+		"message": "new menu item successfully created",
 	})
 }
 
-func GetDrinks(c *fiber.Ctx) error {
+func GetMenu(c *fiber.Ctx) error {
 	queries := c.Queries()
 
-	var drinks []models.Drink
+	var menu []models.Menu
 
 	var result *gorm.DB
+	/* 	joinQuery := "join menu_types on menu.type_id=menu_types.id"
+	   	selectQuery := "menu.id, menu.name, menu_types.type, menu.created_at, menu.updated_at" */
 
-	if queries["drink_name"] != "" {
-		result = database.DB.Where("drink_name ILIKE ?", fmt.Sprintf("%%%s%%", queries["drink_name"])).Find(&drinks)
+	if queries["item_name"] != "" {
+		result = database.DB.Where("item_name ILIKE ?", fmt.Sprintf("%%%s%%", queries["item_name"])).Find(&menu)
 	} else {
-		result = database.DB.Where(queries).Find(&drinks)
+		crosstabJoinQuery := "join crosstab('select menu_id, menu_option_value_id, price from variant_values group by 1,2,3 order by 1,2', $$select distinct menu_option_value_id from variant_values order by 1$$) as ct(menu_id uuid, iced numeric, hot numeric, blend numeric, regular numeric, plain numeric) on menu.id=ct.menu_id"
+		menuTypesJoinQuery := "join menu_types on menu.type_id=menu_types.id"
+		selectQueryString = "menu.id, menu.name, menu_types.type, ct.iced, ct.hot, ct.blend, ct.regular, ct.plain"
+		result = database.DB.Table("menu").Select(selectQueryString).Joins(crosstabJoinQuery).Joins(menuTypesJoinQuery).Where(queries).Find(&menu)
 	}
 
 	if result.Error != nil {
@@ -63,10 +68,10 @@ func GetDrinks(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.JSON(&drinks)
+	return c.JSON(&menu)
 }
 
-func GetDrinkByID(c *fiber.Ctx) error {
+func GetMenuItemByID(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 
 	if err != nil {
@@ -76,9 +81,9 @@ func GetDrinkByID(c *fiber.Ctx) error {
 		})
 	}
 
-	var drink models.Drink
+	var menuItem models.BaseMenu
 
-	result := database.DB.First(&drink, "id = ?", id)
+	result := database.DB.First(&menuItem, "id = ?", id)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -92,10 +97,10 @@ func GetDrinkByID(c *fiber.Ctx) error {
 			"message": "no data",
 		})
 	}
-	return c.JSON(&drink)
+	return c.JSON(&menuItem)
 }
 
-func UpdateDrink(c *fiber.Ctx) error {
+func UpdateMenuItem(c *fiber.Ctx) error {
 	c.Accepts("application/json")
 	id, err := uuid.Parse(c.Params("id"))
 
@@ -106,9 +111,9 @@ func UpdateDrink(c *fiber.Ctx) error {
 		})
 	}
 
-	drink := new(models.Drink)
+	menuItem := new(models.BaseMenu)
 
-	if err := c.BodyParser(drink); err != nil {
+	if err := c.BodyParser(menuItem); err != nil {
 		log.Println(err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
@@ -116,9 +121,9 @@ func UpdateDrink(c *fiber.Ctx) error {
 		})
 	}
 
-	drink.Id = id
-	drink.Updated_at = time.Now()
-	result := database.DB.Save(&drink)
+	menuItem.ID = id
+	menuItem.Updated_at = time.Now()
+	result := database.DB.Save(&menuItem)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -140,12 +145,10 @@ func UpdateDrink(c *fiber.Ctx) error {
 	})
 }
 
-func DeleteDrink(c *fiber.Ctx) error {
+func DeleteMenuItem(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	type Drink models.Drink
-
-	result := database.DB.Where("id = ?", id).Delete(&Drink{})
+	result := database.DB.Where("id = ?", id).Delete(&models.BaseMenu{})
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
