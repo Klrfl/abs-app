@@ -49,7 +49,7 @@ func GetMenu(c *fiber.Ctx) error {
 	if queries["item_name"] != "" {
 		result = database.DB.Where("item_name ILIKE ?", fmt.Sprintf("%%%s%%", queries["item_name"])).Find(&menu)
 	} else {
-		crosstabJoinQuery := "join crosstab('select menu_id, menu_option_value_id, price from variant_values group by 1,2,3 order by 1,2', $$select distinct menu_option_value_id from variant_values order by 1$$) as ct(menu_id uuid, iced numeric, hot numeric, blend numeric, regular numeric, plain numeric) on menu.id=ct.menu_id"
+		crosstabJoinQuery := "join crosstab('select menu_id, option_value_id, price from variant_values group by 1,2,3 order by 1,2', $$select distinct option_value_id from variant_values order by 1$$) as ct(menu_id uuid, iced numeric, hot numeric, blend numeric, regular numeric, plain numeric) on menu.id=ct.menu_id"
 		menuTypesJoinQuery := "join menu_types on menu.type_id=menu_types.id"
 		selectQueryString = "menu.id, menu.name, menu_types.type, ct.iced, ct.hot, ct.blend, ct.regular, ct.plain"
 		result = database.DB.Table("menu").Select(selectQueryString).Joins(crosstabJoinQuery).Joins(menuTypesJoinQuery).Where(queries).Find(&menu)
@@ -122,7 +122,7 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 	}
 
 	menuItem.ID = id
-	menuItem.Updated_at = time.Now()
+	menuItem.UpdatedAt = time.Now()
 	result := database.DB.Save(&menuItem)
 
 	if result.Error != nil {
