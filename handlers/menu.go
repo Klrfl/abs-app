@@ -12,6 +12,13 @@ import (
 	"gorm.io/gorm"
 )
 
+var (
+	availableOptionsJoinString string = "join menu_available_options on variant_values.option_id=menu_available_options.id"
+	menuOptionValuesJoinString string = "join menu_option_values on variant_values.option_value_id=menu_option_values.id"
+	selectQueryString          string = "menu.id, menu.name, menu_types.type, ct.iced, ct.hot, ct.blend, ct.regular, ct.plain, menu.created_at, menu.updated_at"
+	variantValuesQueryString   string = "variant_values.menu_id, variant_values.option_id, menu_available_options.option, variant_values.option_value_id, menu_option_values.value as option_value, price"
+)
+
 func CreateNewMenuItem(c *fiber.Ctx) error {
 	var newMenuItem models.BaseMenu
 
@@ -40,19 +47,13 @@ func CreateNewMenuItem(c *fiber.Ctx) error {
 func GetMenu(c *fiber.Ctx) error {
 	queries := c.Queries()
 
-	var menu []models.Menu
-
+	var menu []*models.Menu
 	var result *gorm.DB
-	/* 	joinQuery := "join menu_types on menu.type_id=menu_types.id"
-	   	selectQuery := "menu.id, menu.name, menu_types.type, menu.created_at, menu.updated_at" */
 
-	if queries["item_name"] != "" {
-		result = database.DB.Where("item_name ILIKE ?", fmt.Sprintf("%%%s%%", queries["item_name"])).Find(&menu)
+	if queries["name"] != "" {
+		result = database.DB.Preload("Type").Where("name ILIKE ?", fmt.Sprintf("%%%s%%", queries["name"])).Find(&menu)
 	} else {
-		crosstabJoinQuery := "join crosstab('select menu_id, option_value_id, price from variant_values group by 1,2,3 order by 1,2', $$select distinct option_value_id from variant_values order by 1$$) as ct(menu_id uuid, iced numeric, hot numeric, blend numeric, regular numeric, plain numeric) on menu.id=ct.menu_id"
-		menuTypesJoinQuery := "join menu_types on menu.type_id=menu_types.id"
-		selectQueryString = "menu.id, menu.name, menu_types.type, ct.iced, ct.hot, ct.blend, ct.regular, ct.plain"
-		result = database.DB.Table("menu").Select(selectQueryString).Joins(crosstabJoinQuery).Joins(menuTypesJoinQuery).Where(queries).Find(&menu)
+		result = database.DB.Preload("Type").Find(&menu)
 	}
 
 	if result.Error != nil {
@@ -68,7 +69,47 @@ func GetMenu(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.JSON(&menu)
+	// append price data to each menu item
+
+	for _, menuItem := range menu {
+		var variantValues []*models.VariantValue
+
+		rows, err := database.DB.
+			Model(&models.VariantValue{}).
+			Select(variantValuesQueryString).
+			Joins(availableOptionsJoinString).
+			Joins(menuOptionValuesJoinString).
+			Where("variant_values.menu_id = ?", menuItem.ID).
+			Rows()
+
+		defer rows.Close()
+
+		if err != nil {
+			return c.JSON(fiber.Map{
+				"err":     true,
+				"message": "error when querying database",
+			})
+		}
+
+		for rows.Next() {
+			var variantValue models.VariantValue
+			rows.Scan(
+				&variantValue.MenuID,
+				&variantValue.OptionID,
+				&variantValue.Option,
+				&variantValue.OptionValueID,
+				&variantValue.OptionValue,
+				&variantValue.Price,
+			)
+			variantValues = append(variantValues, &variantValue)
+		}
+		menuItem.VariantValues = variantValues
+	}
+
+	return c.JSON(fiber.Map{
+		"err":  false,
+		"data": menu,
+	})
 }
 
 func GetMenuItemByID(c *fiber.Ctx) error {
@@ -81,9 +122,8 @@ func GetMenuItemByID(c *fiber.Ctx) error {
 		})
 	}
 
-	var menuItem models.BaseMenu
-
-	result := database.DB.First(&menuItem, "id = ?", id)
+	var menuItem *models.Menu
+	result := database.DB.Preload("Type").Where("id = ?", id).First(&menuItem)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -97,6 +137,40 @@ func GetMenuItemByID(c *fiber.Ctx) error {
 			"message": "no data",
 		})
 	}
+
+	var variantValues []*models.VariantValue
+
+	rows, err := database.DB.
+		Model(&models.VariantValue{}).
+		Select(variantValuesQueryString).
+		Joins(availableOptionsJoinString).
+		Joins(menuOptionValuesJoinString).
+		Where("variant_values.menu_id = ?", menuItem.ID).
+		Rows()
+
+	defer rows.Close()
+
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"err":     true,
+			"message": "error when querying database",
+		})
+	}
+
+	for rows.Next() {
+		var variantValue models.VariantValue
+		rows.Scan(
+			&variantValue.MenuID,
+			&variantValue.OptionID,
+			&variantValue.Option,
+			&variantValue.OptionValueID,
+			&variantValue.OptionValue,
+			&variantValue.Price,
+		)
+		variantValues = append(variantValues, &variantValue)
+	}
+	menuItem.VariantValues = variantValues
+
 	return c.JSON(&menuItem)
 }
 
@@ -111,7 +185,7 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 		})
 	}
 
-	menuItem := new(models.BaseMenu)
+	menuItem := new(models.Menu)
 
 	if err := c.BodyParser(menuItem); err != nil {
 		log.Println(err)
@@ -148,7 +222,7 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 func DeleteMenuItem(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	result := database.DB.Where("id = ?", id).Delete(&models.BaseMenu{})
+	result := database.DB.Where("id = ?", id).Delete(&models.Menu{})
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

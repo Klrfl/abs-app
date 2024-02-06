@@ -10,9 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var joinQueryString string = "join members on orders.member_id=members.id join drinks on orders.drink_id=drinks.id"
-var selectQueryString string = "orders.id, members.member_name, drinks.drink_name, drinks.drink_type, drinks.hot_price, drinks.cold_price, orders.is_completed, orders.created_at"
-
 func GetOrders(c *fiber.Ctx) error {
 	var id uuid.UUID
 	var err error
@@ -60,7 +57,8 @@ func GetOrders(c *fiber.Ctx) error {
 
 	for _, order := range orders {
 		var orderDetails []*models.OrderDetail
-		rows, err := database.DB.Table("order_details").
+		rows, err := database.DB.
+			Model(&models.OrderDetail{}).
 			Select("order_details.order_id, menu.id, menu.name, menu_types.type, menu_available_options.id, menu_available_options.option, menu_option_values.id, menu_option_values.value, order_details.quantity, order_details.quantity * variant_values.price as total_price").
 			Joins("join variant_values on order_details.menu_id=variant_values.menu_id and order_details.menu_option_value_id=variant_values.option_value_id").
 			Joins("join menu on order_details.menu_id=menu.id").
@@ -116,7 +114,7 @@ func GetOrderByID(c *fiber.Ctx) error {
 	}
 
 	order := new(models.Order)
-	result := database.DB.Joins(joinQueryString).Select(selectQueryString).Where("orders.id = ?", id).Find(&order)
+	result := database.DB.Preload("Member").Where("orders.id = ?", id).Find(&order)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -130,6 +128,44 @@ func GetOrderByID(c *fiber.Ctx) error {
 			"err":     false,
 			"message": "no data",
 		})
+	}
+
+	var orderDetails []*models.OrderDetail
+	rows, err := database.DB.
+		Model(&models.OrderDetail{}).
+		Select("order_details.order_id, menu.id, menu.name, menu_types.type, menu_available_options.id, menu_available_options.option, menu_option_values.id, menu_option_values.value, order_details.quantity, order_details.quantity * variant_values.price as total_price").
+		Joins("join variant_values on order_details.menu_id=variant_values.menu_id and order_details.menu_option_value_id=variant_values.option_value_id").
+		Joins("join menu on order_details.menu_id=menu.id").
+		Joins("join menu_types on menu.type_id=menu_types.id").
+		Joins("join menu_option_values on order_details.menu_option_value_id=menu_option_values.id").
+		Joins("join menu_available_options on order_details.menu_option_id=menu_available_options.id").
+		Where("order_details.order_id = ?", order.ID).
+		Rows()
+
+	defer rows.Close()
+
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"err":     true,
+			"message": "error when querying database for order_details",
+		})
+	}
+
+	for rows.Next() {
+		var orderDetail models.OrderDetail
+		rows.Scan(
+			&orderDetail.OrderID,
+			&orderDetail.MenuID,
+			&orderDetail.MenuName,
+			&orderDetail.MenuType,
+			&orderDetail.MenuOptionID,
+			&orderDetail.MenuOption,
+			&orderDetail.MenuOptionValueID,
+			&orderDetail.MenuOptionValue,
+			&orderDetail.Quantity,
+			&orderDetail.TotalPrice,
+		)
+		orderDetails = append(orderDetails, &orderDetail)
 	}
 
 	return c.JSON(fiber.Map{

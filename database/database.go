@@ -38,7 +38,7 @@ func Init() {
 	log.Println("Successfully connected to database")
 
 	DB.AutoMigrate(
-		&models.BaseMenu{},
+		&models.Menu{},
 		&models.Order{},
 		&models.Member{},
 		&models.MenuType{},
