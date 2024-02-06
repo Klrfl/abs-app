@@ -32,7 +32,7 @@ func CreateNewMenuItem(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return c.JSON(fiber.Map{
 			"err":     true,
-			"message": "error when querying database",
+			"message": "error when inserting new menu data to database",
 		})
 	}
 
@@ -41,7 +41,15 @@ func CreateNewMenuItem(c *fiber.Ctx) error {
 	newVariantValue.OptionID = incomingMenuItem.OptionID
 	newVariantValue.OptionValueID = incomingMenuItem.OptionValueID
 	newVariantValue.Price = incomingMenuItem.Price
+
 	result = database.DB.Save(&newVariantValue)
+
+	if result.Error != nil {
+		return c.JSON(fiber.Map{
+			"err":     true,
+			"message": "error when inserting new menu data to database",
+		})
+	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"err":     false,
@@ -58,11 +66,12 @@ func GetMenu(c *fiber.Ctx) error {
 	if queries["name"] != "" {
 		result = database.DB.
 			Preload("Type").
-			Where("name ILIKE ?", fmt.Sprintf("%%%s%%", queries["name"])).
+			Where("menu.name ILIKE ?", fmt.Sprintf("%%%s%%", queries["name"])).
 			Find(&menu)
 	} else {
 		result = database.DB.
 			Preload("Type").
+			Where(&models.Menu{TypeID: c.QueryInt("type_id")}).
 			Find(&menu)
 	}
 
@@ -169,7 +178,7 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 
 	menuItem := new(models.Menu)
 
-	if err := c.BodyParser(menuItem); err != nil {
+	if err := c.BodyParser(&menuItem); err != nil {
 		log.Println(err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
