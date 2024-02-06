@@ -216,9 +216,18 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 }
 
 func DeleteMenuItem(c *fiber.Ctx) error {
-	id := c.Params("id")
+	id, err := uuid.Parse(c.Params("id"))
 
-	result := database.DB.Where("id = ?", id).Delete(&models.Menu{})
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"err":     true,
+			"message": "ID not valid",
+		})
+	}
+
+	result := database.DB.
+		Select("VariantValues").
+		Delete(&models.Menu{ID: id})
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

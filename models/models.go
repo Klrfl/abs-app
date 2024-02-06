@@ -13,7 +13,7 @@ type Menu struct {
 	Type          MenuType        `json:"type"`
 	CreatedAt     time.Time       `json:"created_at" gorm:"default:now()"`
 	UpdatedAt     time.Time       `json:"updated_at" gorm:"default:now()"`
-	VariantValues []*VariantValue `json:"variant_values" gorm:"foreignKey:MenuID;references:ID"`
+	VariantValues []*VariantValue `json:"variant_values" gorm:"foreignKey:MenuID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
 func (Menu) TableName() string {
