@@ -12,22 +12,20 @@ import (
 	"gorm.io/gorm"
 )
 
-var (
-	availableOptionsJoinString string = "join menu_available_options on variant_values.option_id=menu_available_options.id"
-	menuOptionValuesJoinString string = "join menu_option_values on variant_values.option_value_id=menu_option_values.id"
-	selectQueryString          string = "menu.id, menu.name, menu_types.type, ct.iced, ct.hot, ct.blend, ct.regular, ct.plain, menu.created_at, menu.updated_at"
-	variantValuesQueryString   string = "variant_values.menu_id, variant_values.option_id, menu_available_options.option, variant_values.option_value_id, menu_option_values.value as option_value, price"
-)
-
 func CreateNewMenuItem(c *fiber.Ctx) error {
-	var newMenuItem models.BaseMenu
+	var incomingMenuItem models.InputMenu
 
-	if err := c.BodyParser(&newMenuItem); err != nil {
+	if err := c.BodyParser(&incomingMenuItem); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
 			"message": "something wrong with new drink data",
 		})
 	}
+
+	var newMenuItem models.Menu
+	newMenuItem.ID = uuid.New()
+	newMenuItem.Name = incomingMenuItem.Name
+	newMenuItem.TypeID = incomingMenuItem.TypeID
 
 	result := database.DB.Save(&newMenuItem)
 
@@ -37,6 +35,13 @@ func CreateNewMenuItem(c *fiber.Ctx) error {
 			"message": "error when querying database",
 		})
 	}
+
+	var newVariantValue models.VariantValue
+	newVariantValue.MenuID = newMenuItem.ID
+	newVariantValue.OptionID = incomingMenuItem.OptionID
+	newVariantValue.OptionValueID = incomingMenuItem.OptionValueID
+	newVariantValue.Price = incomingMenuItem.Price
+	result = database.DB.Save(&newVariantValue)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"err":     false,
@@ -51,9 +56,14 @@ func GetMenu(c *fiber.Ctx) error {
 	var result *gorm.DB
 
 	if queries["name"] != "" {
-		result = database.DB.Preload("Type").Where("name ILIKE ?", fmt.Sprintf("%%%s%%", queries["name"])).Find(&menu)
+		result = database.DB.
+			Preload("Type").
+			Where("name ILIKE ?", fmt.Sprintf("%%%s%%", queries["name"])).
+			Find(&menu)
 	} else {
-		result = database.DB.Preload("Type").Find(&menu)
+		result = database.DB.
+			Preload("Type").
+			Find(&menu)
 	}
 
 	if result.Error != nil {
@@ -74,15 +84,12 @@ func GetMenu(c *fiber.Ctx) error {
 	for _, menuItem := range menu {
 		var variantValues []*models.VariantValue
 
-		rows, err := database.DB.
+		err := database.DB.
 			Model(&models.VariantValue{}).
-			Select(variantValuesQueryString).
-			Joins(availableOptionsJoinString).
-			Joins(menuOptionValuesJoinString).
+			Preload("Option").
+			Preload("OptionValue").
 			Where("variant_values.menu_id = ?", menuItem.ID).
-			Rows()
-
-		defer rows.Close()
+			Find(&variantValues).Error
 
 		if err != nil {
 			return c.JSON(fiber.Map{
@@ -91,18 +98,6 @@ func GetMenu(c *fiber.Ctx) error {
 			})
 		}
 
-		for rows.Next() {
-			var variantValue models.VariantValue
-			rows.Scan(
-				&variantValue.MenuID,
-				&variantValue.OptionID,
-				&variantValue.Option,
-				&variantValue.OptionValueID,
-				&variantValue.OptionValue,
-				&variantValue.Price,
-			)
-			variantValues = append(variantValues, &variantValue)
-		}
 		menuItem.VariantValues = variantValues
 	}
 
@@ -123,7 +118,10 @@ func GetMenuItemByID(c *fiber.Ctx) error {
 	}
 
 	var menuItem *models.Menu
-	result := database.DB.Preload("Type").Where("id = ?", id).First(&menuItem)
+	result := database.DB.
+		Preload("Type").
+		Where("id = ?", id).
+		First(&menuItem)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -139,16 +137,12 @@ func GetMenuItemByID(c *fiber.Ctx) error {
 	}
 
 	var variantValues []*models.VariantValue
-
-	rows, err := database.DB.
+	err = database.DB.
 		Model(&models.VariantValue{}).
-		Select(variantValuesQueryString).
-		Joins(availableOptionsJoinString).
-		Joins(menuOptionValuesJoinString).
+		Preload("Option").
+		Preload("OptionValue").
 		Where("variant_values.menu_id = ?", menuItem.ID).
-		Rows()
-
-	defer rows.Close()
+		Find(&variantValues).Error
 
 	if err != nil {
 		return c.JSON(fiber.Map{
@@ -157,18 +151,6 @@ func GetMenuItemByID(c *fiber.Ctx) error {
 		})
 	}
 
-	for rows.Next() {
-		var variantValue models.VariantValue
-		rows.Scan(
-			&variantValue.MenuID,
-			&variantValue.OptionID,
-			&variantValue.Option,
-			&variantValue.OptionValueID,
-			&variantValue.OptionValue,
-			&variantValue.Price,
-		)
-		variantValues = append(variantValues, &variantValue)
-	}
 	menuItem.VariantValues = variantValues
 
 	return c.JSON(&menuItem)

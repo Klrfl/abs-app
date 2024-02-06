@@ -20,6 +20,15 @@ func (Menu) TableName() string {
 	return "menu"
 }
 
+type VariantValue struct {
+	MenuID        uuid.UUID           `json:"menu_id" gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+	OptionID      int                 `json:"option_id" gorm:"primaryKey"`
+	OptionValueID int                 `json:"option_value_id" gorm:"primaryKey"`
+	Option        MenuAvailableOption `json:"option" gorm:"foreignKey:OptionID"`
+	OptionValue   MenuOptionValue     `json:"option_value" gorm:"foreignKey:OptionValueID"`
+	Price         int                 `json:"price"`
+}
+
 }
 
 type MenuType struct {
