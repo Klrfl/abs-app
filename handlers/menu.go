@@ -130,7 +130,8 @@ func GetMenuItemByID(c *fiber.Ctx) error {
 	result := database.DB.
 		Preload("Type").
 		Where("id = ?", id).
-		First(&menuItem)
+		Limit(1).
+		Find(&menuItem)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
