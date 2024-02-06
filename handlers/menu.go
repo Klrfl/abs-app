@@ -18,34 +18,38 @@ func CreateNewMenuItem(c *fiber.Ctx) error {
 	if err := c.BodyParser(&incomingMenuItem); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
-			"message": "something wrong with new drink data",
+			"message": "something wrong with the new menu item's data",
 		})
 	}
 
 	var newMenuItem models.Menu
+
 	newMenuItem.ID = uuid.New()
 	newMenuItem.Name = incomingMenuItem.Name
 	newMenuItem.TypeID = incomingMenuItem.TypeID
 
-	result := database.DB.Save(&newMenuItem)
+	error := database.DB.
+		Select("Name", "TypeID").
+		Create(&newMenuItem).Error
 
-	if result.Error != nil {
-		return c.JSON(fiber.Map{
+	if error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when inserting new menu data to database",
 		})
 	}
 
 	var newVariantValue models.VariantValue
+
 	newVariantValue.MenuID = newMenuItem.ID
 	newVariantValue.OptionID = incomingMenuItem.OptionID
 	newVariantValue.OptionValueID = incomingMenuItem.OptionValueID
 	newVariantValue.Price = incomingMenuItem.Price
 
-	result = database.DB.Save(&newVariantValue)
+	error = database.DB.Create(&newVariantValue).Error
 
-	if result.Error != nil {
-		return c.JSON(fiber.Map{
+	if error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when inserting new menu data to database",
 		})
