@@ -4,8 +4,6 @@ import (
 	"abs-app/database"
 	"abs-app/models"
 	"fmt"
-	"log"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -181,19 +179,17 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 		})
 	}
 
-	menuItem := new(models.Menu)
+	incomingMenuItem := new(models.InputMenu)
 
-	if err := c.BodyParser(&menuItem); err != nil {
-		log.Println(err)
+	if err := c.BodyParser(&incomingMenuItem); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
 			"message": "something wrong with the drink data",
 		})
 	}
 
-	menuItem.ID = id
-	menuItem.UpdatedAt = time.Now()
-	result := database.DB.Save(&menuItem)
+	menuItem := new(models.Menu)
+	result := database.DB.Where("id = ?", id).First(&menuItem)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -205,7 +201,24 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 	if result.RowsAffected == 0 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"err":     false,
-			"message": "no drink found",
+			"message": "no menu item found",
+		})
+	}
+
+	error1 := database.DB.
+		Model(&models.Menu{}).
+		Where("id = ?", id).
+		Updates(&incomingMenuItem).Error
+
+	error2 := database.DB.
+		Model(&models.VariantValue{}).
+		Where("menu_id = ?", id).
+		Updates(&incomingMenuItem).Error
+
+	if error1 != nil || error2 != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when updating menu item",
 		})
 	}
 
