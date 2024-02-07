@@ -11,7 +11,7 @@ import (
 )
 
 func CreateNewMenuItem(c *fiber.Ctx) error {
-	var incomingMenuItem models.InputMenu
+	var incomingMenuItem models.Menu
 
 	if err := c.BodyParser(&incomingMenuItem); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -37,14 +37,12 @@ func CreateNewMenuItem(c *fiber.Ctx) error {
 		})
 	}
 
-	var newVariantValue models.VariantValue
-
-	newVariantValue.MenuID = newMenuItem.ID
-	newVariantValue.OptionID = incomingMenuItem.OptionID
-	newVariantValue.OptionValueID = incomingMenuItem.OptionValueID
-	newVariantValue.Price = incomingMenuItem.Price
-
-	error = database.DB.Create(&newVariantValue).Error
+	newVariantValues := incomingMenuItem.VariantValues
+	// assign id first don't forget about it
+	for _, newVariantValue := range newVariantValues {
+		newVariantValue.MenuID = newMenuItem.ID
+	}
+	error = database.DB.Create(&newVariantValues).Error
 
 	if error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -179,7 +177,7 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 		})
 	}
 
-	incomingMenuItem := new(models.InputMenu)
+	var incomingMenuItem models.Menu
 
 	if err := c.BodyParser(&incomingMenuItem); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -188,7 +186,7 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 		})
 	}
 
-	menuItem := new(models.Menu)
+	var menuItem models.Menu
 	result := database.DB.Where("id = ?", id).First(&menuItem)
 
 	if result.Error != nil {
@@ -210,10 +208,15 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 		Where("id = ?", id).
 		Updates(&incomingMenuItem).Error
 
+	newVariantValues := incomingMenuItem.VariantValues
+	for _, newVariantValue := range newVariantValues {
+		newVariantValue.MenuID = menuItem.ID
+	}
+
 	error2 := database.DB.
 		Model(&models.VariantValue{}).
 		Where("menu_id = ?", id).
-		Updates(&incomingMenuItem).Error
+		Updates(&newVariantValues).Error
 
 	if error1 != nil || error2 != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -251,6 +254,7 @@ func DeleteMenuItem(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"err":     false,
-		"message": "drink successfully deleted",
+		"message": "menu item successfully deleted",
 	})
 }
+

@@ -29,18 +29,6 @@ type VariantValue struct {
 	Price         int                 `json:"price"`
 }
 
-type InputMenu struct {
-	Name          string `json:"name"`
-	TypeID        int    `json:"type_id"`
-	OptionID      int    `json:"option_id"`
-	OptionValueID int    `json:"option_value_id"`
-	Price         int    `json:"price"`
-}
-
-func (InputMenu) TableName() string {
-	return "menu"
-}
-
 type MenuType struct {
 	ID   int    `json:"id" gorm:"primaryKey"`
 	Type string `json:"type"`
