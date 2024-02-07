@@ -231,6 +231,7 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 	})
 }
 
+
 func DeleteMenuItem(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 
@@ -258,3 +259,27 @@ func DeleteMenuItem(c *fiber.Ctx) error {
 	})
 }
 
+func DeleteMenuItems(c *fiber.Ctx) error {
+	var menuIDs uuid.UUIDs
+
+	if err := c.BodyParser(&menuIDs); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "something wrong with your request body",
+		})
+	}
+
+	error := database.DB.Delete(&models.Menu{}, menuIDs).Error
+
+	if error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "something went wrong when deleting menu items from database",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"err":     false,
+		"message": "menu items successfully deleted",
+	})
+}

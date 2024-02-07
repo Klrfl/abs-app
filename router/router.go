@@ -16,6 +16,7 @@ func SetupRoutes(app *fiber.App) {
 	menuRoute.Get("/", handlers.GetMenu)
 	menuRoute.Get("/:id", handlers.GetMenuItemByID)
 	menuRoute.Post("/", handlers.CreateNewMenuItem)
+	menuRoute.Delete("/", handlers.DeleteMenuItems)
 	menuRoute.Patch("/:id", handlers.UpdateMenuItem)
 	menuRoute.Delete("/:id", handlers.DeleteMenuItem)
 
