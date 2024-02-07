@@ -42,6 +42,9 @@ func Init() {
 		&models.Order{},
 		&models.Member{},
 		&models.MenuType{},
-		&models.MenuAvailableOption{})
-	fmt.Println("Database Migrated")
+		&models.VariantValue{},
+		&models.MenuAvailableOption{},
+		&models.MenuOptionValue{},
+	)
+	fmt.Println("Database successfully migrated")
 }
