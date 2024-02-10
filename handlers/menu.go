@@ -288,6 +288,56 @@ func InsertNewPrices(c *fiber.Ctx) error {
 	})
 }
 
+
+func DeletePrices(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"err":     true,
+			"message": "ID not valid",
+		})
+	}
+
+	menuItem := new(models.Menu)
+	result := database.DB.
+		Limit(1).
+		Where("id = ?", id).
+		Find(&menuItem)
+
+	if result.Error != nil {
+		return c.JSON(fiber.Map{
+			"err":     true,
+			"message": "error when querying database",
+		})
+	}
+
+	if result.RowsAffected == 0 {
+		return c.JSON(fiber.Map{
+			"err":     false,
+			"message": fmt.Sprintf("menu item with id %s doesn't exist", id),
+		})
+	}
+
+	OptionID := c.QueryInt("option_id")
+	OptionValueID := c.QueryInt("option_value_id")
+	err = database.DB.
+		Where("option_id = ? AND option_value_id = ?", OptionID, OptionValueID).
+		Delete(&models.VariantValue{}, id).Error
+
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"err":     true,
+			"message": "error when deleting prices of menu item from database",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"err":     false,
+		"message": fmt.Sprintf("prices of menu item with id %s successfully deleted", id),
+	})
+}
+
 func DeleteMenuItem(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 
