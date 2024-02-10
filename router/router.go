@@ -18,6 +18,7 @@ func SetupRoutes(app *fiber.App) {
 	menuRoute.Post("/", handlers.CreateNewMenuItem)
 	menuRoute.Delete("/", handlers.DeleteMenuItems)
 	menuRoute.Patch("/:id", handlers.UpdateMenuItem)
+	menuRoute.Post("/:id/variant_values", handlers.InsertNewPrices)
 	menuRoute.Delete("/:id", handlers.DeleteMenuItem)
 
 	memberRoute := app.Group("/members")
