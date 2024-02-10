@@ -288,6 +288,98 @@ func InsertNewPrices(c *fiber.Ctx) error {
 	})
 }
 
+func UpdatePrices(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	id, err := uuid.Parse(c.Params("id"))
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": fmt.Sprintf("menu id (%s) not valid", id),
+		})
+	}
+
+	menuItem := new(models.Menu)
+	result := database.DB.
+		Limit(1).
+		Where("id = ?", id).
+		Find(&menuItem)
+
+	if result.Error != nil {
+		return c.JSON(fiber.Map{
+			"err":     true,
+			"message": "something wrong when querying database",
+		})
+	}
+
+	if result.RowsAffected == 0 {
+		return c.JSON(fiber.Map{
+			"err":     true,
+			"message": fmt.Sprintf("menu item with id %s doesn't exist", id),
+		})
+	}
+
+	incomingVariantValues := new([]*models.InputVariantValue)
+
+	if err := c.BodyParser(&incomingVariantValues); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "something wrong with the body of your request",
+		})
+	}
+
+	for _, variantValue := range *incomingVariantValues {
+		targetVariantValue := new(models.VariantValue)
+		result = database.DB.
+			Where("menu_id = ? AND option_id = ? AND option_value_id = ?", id, variantValue.OptionID, variantValue.OptionValueID).
+			Limit(1).
+			Find(&targetVariantValue)
+
+		if result.Error != nil {
+			return c.JSON(fiber.Map{
+				"err":     true,
+				"message": "error when querying database for prices",
+			})
+		}
+
+		if result.RowsAffected == 0 {
+			return c.JSON(fiber.Map{
+				"err":     true,
+				"message": fmt.Sprintf("one of prices for menu %s not found. Make sure all prices supplied exists", id),
+			})
+		}
+
+		var newVariantValue models.VariantValue
+		newVariantValue.MenuID = id
+		newVariantValue.OptionValueID = variantValue.NewOptionValueID
+		newVariantValue.OptionID = variantValue.NewOptionID
+		newVariantValue.Price = variantValue.Price
+
+		result = database.DB.
+			Model(&models.VariantValue{}).
+			Where("menu_id = ? AND option_id = ? AND option_value_id = ?", id, variantValue.OptionID, variantValue.OptionValueID).
+			Updates(&newVariantValue)
+
+		if result.Error != nil {
+			return c.JSON(fiber.Map{
+				"err":     true,
+				"message": "something went wrong when updating prices",
+			})
+		}
+
+		if result.RowsAffected == 0 {
+			return c.JSON(fiber.Map{
+				"err":     true,
+				"message": "your update doesn't work lol?",
+			})
+		}
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"err":     false,
+		"message": "prices for menu successfully updated",
+	})
+}
 
 func DeletePrices(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))

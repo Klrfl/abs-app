@@ -29,6 +29,14 @@ type VariantValue struct {
 	Price         int                 `json:"price"`
 }
 
+type InputVariantValue struct {
+	OptionID         int `json:"option_id"`
+	NewOptionID      int `json:"new_option_id"`
+	OptionValueID    int `json:"option_value_id"`
+	NewOptionValueID int `json:"new_option_value_id"`
+	Price            int `json:"price"`
+}
+
 type MenuType struct {
 	ID   int    `json:"id" gorm:"primaryKey"`
 	Type string `json:"type"`
