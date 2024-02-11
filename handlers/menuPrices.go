@@ -4,6 +4,7 @@ import (
 	"abs-app/database"
 	"abs-app/models"
 	"fmt"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -26,7 +27,7 @@ func InsertNewPrices(c *fiber.Ctx) error {
 		Find(&menuItem)
 
 	if result.Error != nil {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "something wrong when querying database",
 		})
@@ -53,7 +54,10 @@ func InsertNewPrices(c *fiber.Ctx) error {
 	}
 	result = database.DB.Create(&newVariantValues)
 
-	if result.Error != nil {
+	menuItem.UpdatedAt = time.Now()
+	result2 := database.DB.Updates(&menuItem)
+
+	if result.Error != nil || result2.Error != nil {
 		return c.JSON(fiber.Map{
 			"err":     true,
 			"message": "error when inserting new prices",
@@ -84,15 +88,15 @@ func UpdatePrices(c *fiber.Ctx) error {
 		Find(&menuItem)
 
 	if result.Error != nil {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "something wrong when querying database",
 		})
 	}
 
 	if result.RowsAffected == 0 {
-		return c.JSON(fiber.Map{
-			"err":     true,
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"err":     false,
 			"message": fmt.Sprintf("menu item with id %s doesn't exist", id),
 		})
 	}
@@ -114,14 +118,14 @@ func UpdatePrices(c *fiber.Ctx) error {
 			Find(&targetVariantValue)
 
 		if result.Error != nil {
-			return c.JSON(fiber.Map{
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"err":     true,
 				"message": "error when querying database for prices",
 			})
 		}
 
 		if result.RowsAffected == 0 {
-			return c.JSON(fiber.Map{
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"err":     true,
 				"message": fmt.Sprintf("one of prices for menu %s not found. Make sure all prices supplied exists", id),
 			})
@@ -138,8 +142,11 @@ func UpdatePrices(c *fiber.Ctx) error {
 			Where("menu_id = ? AND option_id = ? AND option_value_id = ?", id, variantValue.OptionID, variantValue.OptionValueID).
 			Updates(&newVariantValue)
 
-		if result.Error != nil {
-			return c.JSON(fiber.Map{
+		menuItem.UpdatedAt = time.Now()
+		result2 := database.DB.Updates(&menuItem)
+
+		if result.Error != nil || result2.Error != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"err":     true,
 				"message": "something went wrong when updating prices",
 			})
@@ -159,7 +166,7 @@ func UpdatePrices(c *fiber.Ctx) error {
 	})
 }
 
-func DeletePrices(c *fiber.Ctx) error {
+func DeletePrice(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 
 	if err != nil {
@@ -183,7 +190,7 @@ func DeletePrices(c *fiber.Ctx) error {
 	}
 
 	if result.RowsAffected == 0 {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"err":     false,
 			"message": fmt.Sprintf("menu item with id %s doesn't exist", id),
 		})
@@ -191,14 +198,24 @@ func DeletePrices(c *fiber.Ctx) error {
 
 	OptionID := c.QueryInt("option_id")
 	OptionValueID := c.QueryInt("option_value_id")
-	err = database.DB.
+	result = database.DB.
 		Where("option_id = ? AND option_value_id = ?", OptionID, OptionValueID).
-		Delete(&models.VariantValue{}, id).Error
+		Delete(&models.VariantValue{}, id)
 
-	if err != nil {
-		return c.JSON(fiber.Map{
+	menuItem.UpdatedAt = time.Now()
+	result2 := database.DB.Updates(&menuItem)
+
+	if result.Error != nil || result2.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when deleting prices of menu item from database",
+		})
+	}
+
+	if result.RowsAffected == 0 {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": fmt.Sprintf("failed to delete menu item with id %s", id),
 		})
 	}
 
