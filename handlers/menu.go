@@ -4,6 +4,7 @@ import (
 	"abs-app/database"
 	"abs-app/models"
 	"fmt"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -203,6 +204,7 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 		})
 	}
 
+	incomingMenuItem.UpdatedAt = time.Now()
 	error1 := database.DB.
 		Model(&models.Menu{}).
 		Where("id = ?", id).
@@ -268,12 +270,18 @@ func DeleteMenuItems(c *fiber.Ctx) error {
 		})
 	}
 
-	error := database.DB.Delete(&models.Menu{}, menuIDs).Error
+	result := database.DB.Delete(&models.Menu{}, menuIDs)
 
-	if error != nil {
+	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "something went wrong when deleting menu items from database",
+		})
+	}
+	if result.RowsAffected == 0 {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "delete doesn't work",
 		})
 	}
 
