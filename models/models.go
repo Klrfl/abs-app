@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -55,14 +56,22 @@ type MenuOptionValue struct {
 
 type Member struct {
 	ID        uuid.UUID `json:"id" gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	Name      string    `json:"member_name"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email" gorm:"not null"`
+	Password  string    `json:"-" gorm:"not null"`
 	CreatedAt time.Time `json:"created_at" gorm:"default:now()"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"default:now()"`
 }
 
+type JWTClaim struct {
+	Name  string
+	Email string
+	jwt.RegisteredClaims
+}
+
 type Order struct {
-	ID           uuid.UUID      `json:"id" gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	MemberID     uuid.UUID      `json:"member_id" gorm:"type:uuid"`
+	ID           uuid.UUID      `json:"id" gorm:"primaryKey;type:uuid;default:gen_random_uuid();onDelete:CASCADE"`
+	MemberID     uuid.UUID      `json:"member_id" gorm:"type:uuid;onDelete:CASCADE"`
 	Member       Member         `json:"member"`
 	CreatedAt    time.Time      `json:"created_at" gorm:"default:now()"`
 	IsCompleted  bool           `json:"is_completed" gorm:"default:false"`
@@ -71,8 +80,8 @@ type Order struct {
 }
 
 type OrderDetail struct {
-	OrderID           uuid.UUID `json:"order_id"`
-	MenuID            uuid.UUID `json:"menu_id"`
+	OrderID           uuid.UUID `json:"order_id" gorm:"primaryKey;type:uuid;onDelete:CASCADE"`
+	MenuID            uuid.UUID `json:"menu_id" gorm:"primaryKey;type:uuid"`
 	MenuName          string    `json:"menu_name"`
 	MenuType          string    `json:"menu_type"`
 	MenuOptionID      int       `json:"menu_option_id"`
