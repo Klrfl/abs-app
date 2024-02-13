@@ -8,10 +8,12 @@ import (
 	"github.com/google/uuid"
 )
 
-func GetMembers(c *fiber.Ctx) error {
-	var members []models.Member
+func GetUsers(c *fiber.Ctx) error {
+	members := new([]models.User)
 
-	result := database.DB.Find(&members)
+	result := database.DB.
+		Preload("Role").
+		Find(&members)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -32,7 +34,7 @@ func GetMembers(c *fiber.Ctx) error {
 	})
 }
 
-func GetMemberByID(c *fiber.Ctx) error {
+func GetUserByID(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 
 	if err != nil {
@@ -42,8 +44,11 @@ func GetMemberByID(c *fiber.Ctx) error {
 		})
 	}
 
-	member := new(models.Member)
-	result := database.DB.First(&member, "id = ?", id)
+	member := new(models.User)
+	result := database.DB.
+		Preload("Role").
+		Limit(1).
+		Find(&member, "id = ?", id)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -64,8 +69,8 @@ func GetMemberByID(c *fiber.Ctx) error {
 	})
 }
 
-func CreateNewMember(c *fiber.Ctx) error {
-	newMember := new(models.Member)
+func CreateNewUser(c *fiber.Ctx) error {
+	newMember := new(models.User)
 
 	if err := c.BodyParser(newMember); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -89,14 +94,14 @@ func CreateNewMember(c *fiber.Ctx) error {
 	})
 }
 
-func UpdateMemberData(c *fiber.Ctx) error {
+func UpdateUserData(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusNoContent).JSON(fiber.Map{
 		"err":     false,
-		"message": "member data successfully updated",
+		"message": "not implemented yet",
 	})
 }
 
-func DeleteMember(c *fiber.Ctx) error {
+func DeleteUser(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 
 	if err != nil {
@@ -106,7 +111,7 @@ func DeleteMember(c *fiber.Ctx) error {
 		})
 	}
 
-	member := new(models.Member)
+	member := new(models.User)
 	result := database.DB.Where("id = ?", id).Delete(member)
 
 	if result.Error != nil {

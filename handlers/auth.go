@@ -13,18 +13,16 @@ import (
 )
 
 func Signup(c *fiber.Ctx) error {
-	// receive members struct
-	var newMember models.Member
+	var newUser models.User
 
-	if err := c.BodyParser(&newMember); err != nil {
+	if err := c.BodyParser(&newUser); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
 			"message": "something wrong with the payload",
 		})
 	}
 
-	// insert to members table and generate generatedPassword with bcrypt
-	generatedPassword, err := bcrypt.GenerateFromPassword([]byte(newMember.Password), 14)
+	generatedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), 14)
 
 	if err != nil {
 		return c.JSON(fiber.Map{
@@ -33,8 +31,9 @@ func Signup(c *fiber.Ctx) error {
 		})
 	}
 
-	newMember.Password = string(generatedPassword)
-	result := database.DB.Create(&newMember)
+	newUser.Password = string(generatedPassword)
+	newUser.RoleID = 1
+	result := database.DB.Create(&newUser)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -51,20 +50,20 @@ func Signup(c *fiber.Ctx) error {
 
 func Login(c *fiber.Ctx) error {
 	//TODO: verify password and email
-	var incomingMember models.Member
+	var incomingUser models.User
 
-	if err := c.BodyParser(&incomingMember); err != nil {
+	if err := c.BodyParser(&incomingUser); err != nil {
 		return c.JSON(fiber.Map{
 			"err":     true,
 			"message": "something wrong with the payload",
 		})
 	}
 
-	var existingMember models.Member
+	var existingUser models.User
 
 	result := database.DB.
-		Where("email = ?", incomingMember.Email).
-		Find(&existingMember)
+		Where("email = ?", incomingUser.Email).
+		Find(&existingUser)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -80,7 +79,7 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(existingMember.Password), []byte(incomingMember.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(incomingUser.Password)); err != nil {
 		return c.JSON(fiber.Map{
 			"err":     true,
 			"message": "wrong email or password",
@@ -91,10 +90,11 @@ func Login(c *fiber.Ctx) error {
 	now := time.Now().UTC()
 
 	claims := &models.JWTClaim{
-		Name:  existingMember.Name,
-		Email: existingMember.Email,
+		Name:   existingUser.Name,
+		Email:  existingUser.Email,
+		RoleID: 1,
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   existingMember.ID.String(),
+			Subject:   existingUser.ID.String(),
 			ExpiresAt: jwt.NewNumericDate(expiryTime),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),

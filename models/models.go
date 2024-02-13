@@ -54,25 +54,33 @@ type MenuOptionValue struct {
 	Value    string `json:"value"`
 }
 
-type Member struct {
+type User struct {
 	ID        uuid.UUID `json:"id" gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
 	Name      string    `json:"name"`
 	Email     string    `json:"email" gorm:"not null"`
 	Password  string    `json:"-" gorm:"not null"`
+	RoleID    int       `json:"role_id" gorm:"not null"`
+	Role      Role      `json:"role" gorm:"foreignKey:RoleID"`
 	CreatedAt time.Time `json:"created_at" gorm:"default:now()"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"default:now()"`
 }
 
+type Role struct {
+	ID   int    `json:"id" gorm:"primaryKey"`
+	Name string `json:"name"`
+}
+
 type JWTClaim struct {
-	Name  string
-	Email string
+	Name   string
+	Email  string
+	RoleID int
 	jwt.RegisteredClaims
 }
 
 type Order struct {
 	ID           uuid.UUID      `json:"id" gorm:"primaryKey;type:uuid;default:gen_random_uuid();onDelete:CASCADE"`
-	MemberID     uuid.UUID      `json:"member_id" gorm:"type:uuid;onDelete:CASCADE"`
-	Member       Member         `json:"member"`
+	UserID       uuid.UUID      `json:"user_id" gorm:"type:uuid;onDelete:CASCADE"`
+	User         User           `json:"user"`
 	CreatedAt    time.Time      `json:"created_at" gorm:"default:now()"`
 	IsCompleted  bool           `json:"is_completed" gorm:"default:false"`
 	CompletedAt  time.Time      `json:"completed_at" gorm:"default:null"`

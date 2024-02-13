@@ -37,14 +37,21 @@ func Init() {
 
 	log.Println("Successfully connected to database")
 
-	DB.AutoMigrate(
+	err = DB.AutoMigrate(
 		&models.Menu{},
 		&models.Order{},
-		&models.Member{},
+		&models.User{},
+		&models.Role{},
 		&models.MenuType{},
 		&models.VariantValue{},
 		&models.MenuAvailableOption{},
 		&models.MenuOptionValue{},
 	)
-	fmt.Println("Database successfully migrated")
+
+	if err != nil {
+		log.Fatal("Failed to migrate database")
+	}
+
+	Seeder()
+	log.Println("Database successfully migrated")
 }

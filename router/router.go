@@ -33,12 +33,12 @@ func SetupRoutes(app *fiber.App) {
 	menuRoute.Delete("/:id/variant_values", handlers.DeletePrice)
 	menuRoute.Delete("/:id", handlers.DeleteMenuItem)
 
-	memberRoute := app.Group("/members")
-	memberRoute.Get("/", handlers.GetMembers)
-	memberRoute.Post("/", handlers.CreateNewMember)
-	memberRoute.Get("/:id", handlers.GetMemberByID)
-	memberRoute.Patch("/:id", handlers.UpdateMemberData)
-	memberRoute.Delete("/:id", handlers.DeleteMember)
+	memberRoute := app.Group("/users")
+	memberRoute.Get("/", handlers.GetUsers)
+	memberRoute.Post("/", handlers.CreateNewUser)
+	memberRoute.Get("/:id", handlers.GetUserByID)
+	memberRoute.Patch("/:id", handlers.UpdateUserData)
+	memberRoute.Delete("/:id", handlers.DeleteUser)
 
 	ordersRoute := app.Group("/orders")
 	ordersRoute.Get("/", handlers.GetOrders)
