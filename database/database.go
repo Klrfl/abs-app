@@ -31,8 +31,7 @@ func Init() {
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
-		log.Println("Successfully connected to database")
-		log.Fatal(err)
+		log.Println("error when connecting to database")
 	}
 
 	log.Println("Successfully connected to database")
@@ -51,7 +50,10 @@ func Init() {
 	if err != nil {
 		log.Fatal("Failed to migrate database")
 	}
-
-	Seeder()
 	log.Println("Database successfully migrated")
+
+	if err := Seeder(); err != nil {
+		log.Fatal("failed to seed data")
+	}
+	log.Println("database seeded")
 }

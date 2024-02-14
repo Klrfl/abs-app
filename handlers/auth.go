@@ -63,6 +63,7 @@ func Login(c *fiber.Ctx) error {
 
 	result := database.DB.
 		Where("email = ?", incomingUser.Email).
+		Limit(1).
 		Find(&existingUser)
 
 	if result.Error != nil {
@@ -92,7 +93,7 @@ func Login(c *fiber.Ctx) error {
 	claims := &models.JWTClaim{
 		Name:   existingUser.Name,
 		Email:  existingUser.Email,
-		RoleID: 1,
+		RoleID: existingUser.RoleID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   existingUser.ID.String(),
 			ExpiresAt: jwt.NewNumericDate(expiryTime),

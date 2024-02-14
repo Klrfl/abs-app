@@ -10,17 +10,27 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func CheckAuth(c *fiber.Ctx) error {
-	// verify tokenString and refresh if less then 20 minutes
-	tokenString := c.Cookies("token")
-	key := os.Getenv("SECRET")
-
+func decodeToken(tokenString string, key string) (*jwt.Token, error) {
 	decodedToken, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected algorithm: %s", t.Header["alg"])
 		}
 		return []byte(key), nil
 	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return decodedToken, nil
+}
+
+func ValidateUserJWT(c *fiber.Ctx) error {
+	// verify tokenString and refresh if less then 20 minutes
+	tokenString := c.Cookies("token")
+	key := os.Getenv("SECRET")
+
+	decodedToken, err := decodeToken(tokenString, key)
 
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -41,10 +51,33 @@ func CheckAuth(c *fiber.Ctx) error {
 
 			return c.SendStatus(fiber.StatusUnauthorized)
 		}
-		log.Println(claims)
 	} else {
 		log.Println("error when parsing claims")
 	}
 
+	return c.Next()
+}
+
+func ValidateAdminJWT(c *fiber.Ctx) error {
+	tokenString := c.Cookies("token")
+	key := os.Getenv("SECRET")
+
+	decodedToken, err := decodeToken(tokenString, key)
+
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"err":     true,
+			"message": "unable to verify token",
+		})
+	}
+
+	if claims, ok := decodedToken.Claims.(jwt.MapClaims); ok {
+		if claims["RoleID"].(float64) == 1 {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"err":     true,
+				"message": "only users with permission can access this resource",
+			})
+		}
+	}
 	return c.Next()
 }

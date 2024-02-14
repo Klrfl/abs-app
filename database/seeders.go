@@ -2,12 +2,13 @@ package database
 
 import (
 	"abs-app/models"
-	"log"
+	"os"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
-func Seeder() {
+func Seeder() error {
 	roles := []models.Role{
 		{
 			ID:   1,
@@ -19,23 +20,32 @@ func Seeder() {
 		},
 	}
 
-	admins := []models.User{
-		{
-			ID:       uuid.New(),
-			Name:     "Admin",
-			Email:    "admin@admin.com",
-			Password: "admin", // TODO: replace with secure password from .env
-			RoleID:   2,
-		},
+	adminUsername := os.Getenv("ADMIN_USERNAME")
+	adminEmail := os.Getenv("ADMIN_EMAIL")
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+
+	newPassword, err := bcrypt.GenerateFromPassword([]byte(adminPassword), 14)
+	if err != nil {
+		return err
+	}
+
+	admins := models.User{
+		ID:       uuid.New(),
+		Name:     adminUsername,
+		Email:    adminEmail,
+		Password: string(newPassword), // TODO: replace with secure password from .env
+		RoleID:   2,
 	}
 
 	result := DB.Save(&roles)
 	if result.Error != nil || result.RowsAffected == 0 {
-		log.Fatal("failed to seed data")
+		return result.Error
 	}
 
-	result = DB.Save(&admins)
+	result = DB.Where("email = ?", adminEmail).Save(&admins)
 	if result.Error != nil || result.RowsAffected == 0 {
-		log.Fatal("failed to seed data")
+		return result.Error
 	}
+
+	return nil
 }

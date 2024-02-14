@@ -24,7 +24,7 @@ func SetupRoutes(app *fiber.App) {
 	menuRoute.Get("/", handlers.GetMenu)
 	menuRoute.Get("/:id", handlers.GetMenuItemByID)
 
-	app.Use(middleware.CheckAuth)
+	app.Use(middleware.ValidateUserJWT)
 	menuRoute.Post("/", handlers.CreateNewMenuItem)
 	menuRoute.Delete("/", handlers.DeleteMenuItems)
 	menuRoute.Patch("/:id", handlers.UpdateMenuItem)
@@ -33,14 +33,17 @@ func SetupRoutes(app *fiber.App) {
 	menuRoute.Delete("/:id/variant_values", handlers.DeletePrice)
 	menuRoute.Delete("/:id", handlers.DeleteMenuItem)
 
-	memberRoute := app.Group("/users")
+	adminRoute := app.Group("/admin")
+	adminRoute.Use(middleware.ValidateAdminJWT)
+
+	memberRoute := adminRoute.Group("/users")
 	memberRoute.Get("/", handlers.GetUsers)
 	memberRoute.Post("/", handlers.CreateNewUser)
 	memberRoute.Get("/:id", handlers.GetUserByID)
 	memberRoute.Patch("/:id", handlers.UpdateUserData)
 	memberRoute.Delete("/:id", handlers.DeleteUser)
 
-	ordersRoute := app.Group("/orders")
+	ordersRoute := adminRoute.Group("/orders")
 	ordersRoute.Get("/", handlers.GetOrders)
 	ordersRoute.Post("/", handlers.CreateNewOrder)
 	ordersRoute.Get("/:id", handlers.GetOrderByID)
