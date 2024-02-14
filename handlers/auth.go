@@ -38,7 +38,7 @@ func Signup(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
-			"message": "error when signing up user",
+			"message": "email already exists",
 		})
 	}
 
@@ -49,11 +49,10 @@ func Signup(c *fiber.Ctx) error {
 }
 
 func Login(c *fiber.Ctx) error {
-	//TODO: verify password and email
 	var incomingUser models.User
 
 	if err := c.BodyParser(&incomingUser); err != nil {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
 			"message": "something wrong with the payload",
 		})
