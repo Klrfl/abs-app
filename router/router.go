@@ -30,8 +30,8 @@ func SetupRoutes(app *fiber.App) {
 	// TODO: make separate handlers for getting orders for user only
 	// or modify handler
 	ordersRoute := api.Group("/orders")
-	ordersRoute.Get("/", handlers.GetPendingOrders)
-	ordersRoute.Get("/:id", handlers.GetOrderByID)
+	ordersRoute.Get("/", handlers.GetOrdersForUser)
+	ordersRoute.Get("/:id", handlers.GetOrdersForUserByID)
 	ordersRoute.Post("/", handlers.CreateNewOrder)
 
 	// admin routes

@@ -90,6 +90,7 @@ func Login(c *fiber.Ctx) error {
 	now := time.Now().UTC()
 
 	claims := &models.JWTClaim{
+		ID:     existingUser.ID,
 		Name:   existingUser.Name,
 		Email:  existingUser.Email,
 		RoleID: existingUser.RoleID,

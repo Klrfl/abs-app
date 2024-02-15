@@ -40,6 +40,7 @@ func ValidateUserJWT(c *fiber.Ctx) error {
 	}
 
 	if claims, ok := decodedToken.Claims.(jwt.MapClaims); ok {
+		c.Locals("user_id", claims["ID"])
 		expiryTime := claims["exp"].(float64)
 
 		// refresh token or abort request
@@ -65,7 +66,7 @@ func ValidateAdminJWT(c *fiber.Ctx) error {
 	decodedToken, err := decodeToken(tokenString, key)
 
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"err":     true,
 			"message": "unable to verify token",
 		})

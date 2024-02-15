@@ -196,7 +196,6 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 			"message": "error when querying database",
 		})
 	}
-
 	if result.RowsAffected == 0 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"err":     false,
@@ -251,6 +250,12 @@ func DeleteMenuItem(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when querying database",
+		})
+	}
+	if result.RowsAffected == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "delete didn't work - item already deleted or does not exist",
 		})
 	}
 

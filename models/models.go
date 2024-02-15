@@ -71,6 +71,7 @@ type Role struct {
 }
 
 type JWTClaim struct {
+	ID     uuid.UUID
 	Name   string
 	Email  string
 	RoleID int
