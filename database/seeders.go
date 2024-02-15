@@ -37,6 +37,7 @@ func Seeder() error {
 		RoleID:   2,
 	}
 
+	DB.Where("role_id = ?", 2).Delete(&models.User{})
 	result := DB.Save(&roles)
 	if result.Error != nil || result.RowsAffected == 0 {
 		return result.Error
