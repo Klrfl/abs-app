@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetOrders(c *fiber.Ctx) error {
+func GetPendingOrders(c *fiber.Ctx) error {
 	var id uuid.UUID
 	var err error
 
@@ -178,22 +178,55 @@ func GetOrderByID(c *fiber.Ctx) error {
 	})
 }
 
-func CreateNewOrder(c *fiber.Ctx) error {
-	newOrder := new(models.Order)
+func GetOrdersForUser(c *fiber.Ctx) error {
+	return c.JSON(fiber.Map{
+		"err": false,
+	})
+}
 
-	if err := c.BodyParser(newOrder); err != nil {
+func CreateNewOrder(c *fiber.Ctx) error {
+	incomingOrder := new(models.Order)
+
+	if err := c.BodyParser(&incomingOrder); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
 			"message": "something wrong with your request body",
 		})
 	}
 
-	result := database.DB.Table("orders").Save(&newOrder)
+	newOrder := new(models.Order)
+
+	newOrder.ID = uuid.New()
+	newOrder.UserID = incomingOrder.UserID
+
+	result := database.DB.Create(&newOrder)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when querying database",
+		})
+	}
+
+	var newOrderDetails []models.BaseOrderDetail
+
+	for _, incomingOrderDetail := range incomingOrder.OrderDetails {
+		var newOrderDetail models.BaseOrderDetail
+		newOrderDetail.OrderID = newOrder.ID
+		newOrderDetail.MenuID = incomingOrderDetail.MenuID
+		newOrderDetail.MenuOptionID = incomingOrderDetail.MenuOptionID
+		newOrderDetail.MenuOptionValueID = incomingOrderDetail.MenuOptionValueID
+		newOrderDetail.Quantity = incomingOrderDetail.Quantity
+
+		newOrderDetails = append(newOrderDetails, newOrderDetail)
+	}
+
+	result = database.DB.Create(newOrderDetails)
+
+	if result.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when inserting order details",
 		})
 	}
 
@@ -223,6 +256,13 @@ func CompleteOrder(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when querying database",
+		})
+	}
+
+	if result.RowsAffected == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "failed to complete order",
 		})
 	}
 

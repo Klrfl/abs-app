@@ -99,3 +99,15 @@ type OrderDetail struct {
 	Quantity          int       `json:"quantity"`
 	TotalPrice        int       `json:"total_price"`
 }
+
+type BaseOrderDetail struct {
+	OrderID           uuid.UUID `json:"order_id" gorm:"primaryKey;type:uuid"`
+	MenuID            uuid.UUID `json:"menu_id" gorm:"primaryKey;type:uuid"`
+	MenuOptionID      int       `json:"menu_option_id"`
+	MenuOptionValueID int       `json:"menu_option_value_id"`
+	Quantity          int       `json:"quantity"`
+}
+
+func (*BaseOrderDetail) TableName() string {
+	return "order_details"
+}

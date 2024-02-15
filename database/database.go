@@ -45,6 +45,7 @@ func Init() {
 		&models.VariantValue{},
 		&models.MenuAvailableOption{},
 		&models.MenuOptionValue{},
+		&models.BaseOrderDetail{},
 	)
 
 	if err != nil {

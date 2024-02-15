@@ -19,22 +19,23 @@ func SetupRoutes(app *fiber.App) {
 	app.Post("/logout", handlers.Logout)
 	app.Post("/signup", handlers.Signup)
 
-	menuRoute := app.Group("/menu")
+	api := app.Group("/api")
 
+	menuRoute := api.Group("/menu")
 	menuRoute.Get("/", handlers.GetMenu)
 	menuRoute.Get("/:id", handlers.GetMenuItemByID)
 
-	app.Use(middleware.ValidateUserJWT)
-	menuRoute.Post("/", handlers.CreateNewMenuItem)
-	menuRoute.Delete("/", handlers.DeleteMenuItems)
-	menuRoute.Patch("/:id", handlers.UpdateMenuItem)
-	menuRoute.Post("/:id/variant_values", handlers.InsertNewPrices)
-	menuRoute.Patch("/:id/variant_values", handlers.UpdatePrices)
-	menuRoute.Delete("/:id/variant_values", handlers.DeletePrice)
-	menuRoute.Delete("/:id", handlers.DeleteMenuItem)
+	api.Use(middleware.ValidateUserJWT)
 
-	adminRoute := app.Group("/admin")
-	adminRoute.Use(middleware.ValidateAdminJWT)
+	// TODO: make separate handlers for getting orders for user only
+	// or modify handler
+	ordersRoute := api.Group("/orders")
+	ordersRoute.Get("/", handlers.GetPendingOrders)
+	ordersRoute.Get("/:id", handlers.GetOrderByID)
+	ordersRoute.Post("/", handlers.CreateNewOrder)
+
+	// admin routes
+	adminRoute := app.Group("/admin", middleware.ValidateAdminJWT)
 
 	memberRoute := adminRoute.Group("/users")
 	memberRoute.Get("/", handlers.GetUsers)
@@ -43,9 +44,18 @@ func SetupRoutes(app *fiber.App) {
 	memberRoute.Patch("/:id", handlers.UpdateUserData)
 	memberRoute.Delete("/:id", handlers.DeleteUser)
 
-	ordersRoute := adminRoute.Group("/orders")
-	ordersRoute.Get("/", handlers.GetOrders)
-	ordersRoute.Post("/", handlers.CreateNewOrder)
-	ordersRoute.Get("/:id", handlers.GetOrderByID)
-	ordersRoute.Patch("/:id", handlers.CompleteOrder)
+	adminOrdersRoute := adminRoute.Group("/orders")
+	adminOrdersRoute.Get("/", handlers.GetPendingOrders)
+	adminOrdersRoute.Get("/:id", handlers.GetOrderByID)
+	adminOrdersRoute.Patch("/:id", handlers.CompleteOrder)
+
+	adminMenuRoute := adminRoute.Group("/menu")
+
+	adminMenuRoute.Post("/", handlers.CreateNewMenuItem)
+	adminMenuRoute.Delete("/", handlers.DeleteMenuItems)
+	adminMenuRoute.Patch("/:id", handlers.UpdateMenuItem)
+	adminMenuRoute.Post("/:id/variant_values", handlers.InsertNewPrices)
+	adminMenuRoute.Patch("/:id/variant_values", handlers.UpdatePrices)
+	adminMenuRoute.Delete("/:id/variant_values", handlers.DeletePrice)
+	adminMenuRoute.Delete("/:id", handlers.DeleteMenuItem)
 }
