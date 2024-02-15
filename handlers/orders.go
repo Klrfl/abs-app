@@ -29,12 +29,15 @@ func GetOrders(c *fiber.Ctx) error {
 		}
 
 		result = database.DB.
-			Preload("Member").
-			Where("members.id = ?", id).
+			Preload("User").
+			Preload("User.Role").
+			Where("users.id = ? AND is_completed = ?", id, false).
 			Find(&orders)
 	} else {
 		result = database.DB.
-			Preload("Member").
+			Preload("User").
+			Preload("User.Role").
+			Where("is_completed = ?", false).
 			Find(&orders)
 	}
 
@@ -52,8 +55,6 @@ func GetOrders(c *fiber.Ctx) error {
 			"data":    orders,
 		})
 	}
-
-	// todo: make raw sql query to get []orderDetails
 
 	for _, order := range orders {
 		var orderDetails []*models.OrderDetail
@@ -114,7 +115,10 @@ func GetOrderByID(c *fiber.Ctx) error {
 	}
 
 	order := new(models.Order)
-	result := database.DB.Preload("Member").Where("orders.id = ?", id).Find(&order)
+	result := database.DB.
+		Preload("User").
+		Where("orders.id = ?", id).
+		Find(&order)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

@@ -70,16 +70,16 @@ func GetUserByID(c *fiber.Ctx) error {
 }
 
 func CreateNewUser(c *fiber.Ctx) error {
-	newMember := new(models.User)
+	newUser := new(models.User)
 
-	if err := c.BodyParser(newMember); err != nil {
+	if err := c.BodyParser(newUser); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
 			"message": "Something wrong with your data",
 		})
 	}
 
-	result := database.DB.Save(&newMember)
+	result := database.DB.Save(&newUser)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
