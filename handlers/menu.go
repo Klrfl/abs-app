@@ -12,7 +12,7 @@ import (
 )
 
 func CreateNewMenuItem(c *fiber.Ctx) error {
-	var incomingMenuItem models.Menu
+	newMenuItem, incomingMenuItem := new(models.Menu), new(models.Menu)
 
 	if err := c.BodyParser(&incomingMenuItem); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -20,8 +20,6 @@ func CreateNewMenuItem(c *fiber.Ctx) error {
 			"message": "something wrong with the new menu item's data",
 		})
 	}
-
-	var newMenuItem models.Menu
 
 	newMenuItem.ID = uuid.New()
 	newMenuItem.Name = incomingMenuItem.Name
@@ -178,7 +176,7 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 		})
 	}
 
-	var incomingMenuItem models.Menu
+	incomingMenuItem, existingMenuItem := new(models.Menu), new(models.Menu)
 
 	if err := c.BodyParser(&incomingMenuItem); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -187,8 +185,9 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 		})
 	}
 
-	var menuItem models.Menu
-	result := database.DB.Where("id = ?", id).First(&menuItem)
+	result := database.DB.
+		Where("id = ?", id).
+		First(&existingMenuItem)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -211,7 +210,7 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 
 	newVariantValues := incomingMenuItem.VariantValues
 	for _, newVariantValue := range newVariantValues {
-		newVariantValue.MenuID = menuItem.ID
+		newVariantValue.MenuID = existingMenuItem.ID
 	}
 
 	error2 := database.DB.

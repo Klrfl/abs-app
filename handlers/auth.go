@@ -49,7 +49,7 @@ func Signup(c *fiber.Ctx) error {
 }
 
 func Login(c *fiber.Ctx) error {
-	var incomingUser models.User
+	incomingUser, existingUser := new(models.User), new(models.User)
 
 	if err := c.BodyParser(&incomingUser); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -57,8 +57,6 @@ func Login(c *fiber.Ctx) error {
 			"message": "something wrong with the payload",
 		})
 	}
-
-	var existingUser models.User
 
 	result := database.DB.
 		Where("email = ?", incomingUser.Email).

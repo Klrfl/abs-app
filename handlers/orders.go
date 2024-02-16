@@ -314,7 +314,7 @@ func CreateNewOrder(c *fiber.Ctx) error {
 		})
 	}
 
-	incomingOrder := new(models.Order)
+	newOrder, incomingOrder := new(models.Order), new(models.Order)
 
 	if err := c.BodyParser(&incomingOrder); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -322,8 +322,6 @@ func CreateNewOrder(c *fiber.Ctx) error {
 			"message": "something wrong with your request body",
 		})
 	}
-
-	newOrder := new(models.Order)
 
 	newOrder.ID = uuid.New()
 	newOrder.UserID = userID
@@ -366,20 +364,20 @@ func CreateNewOrder(c *fiber.Ctx) error {
 }
 
 func CompleteOrder(c *fiber.Ctx) error {
-	id, err := uuid.Parse(c.Params("id"))
+	orderID, err := uuid.Parse(c.Params("id"))
 
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
-			"message": "error when parsing id",
+			"message": "invalid order ID",
 		})
 	}
 
 	order := new(models.Order)
 
-	order.ID = id
+	order.ID = orderID
 	order.CompletedAt = time.Now()
-	result := database.DB.Model(&order).Updates(&order)
+	result := database.DB.Updates(&order)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
