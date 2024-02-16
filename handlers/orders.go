@@ -36,13 +36,13 @@ func GetPendingOrders(c *fiber.Ctx) error {
 
 	var result *gorm.DB
 
-	if c.Query("member_id") != "" {
-		id, err = uuid.Parse(c.Query("member_id"))
+	if c.Query("user_id") != "" {
+		id, err = uuid.Parse(c.Query("user_id"))
 
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"err":     true,
-				"message": "error when processing member id`",
+				"message": "error when processing user ID`",
 			})
 		}
 
@@ -80,7 +80,7 @@ func GetPendingOrders(c *fiber.Ctx) error {
 		defer rows.Close()
 
 		if err != nil {
-			return c.JSON(fiber.Map{
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"err":     true,
 				"message": "error when querying database for order_details",
 			})
@@ -136,7 +136,7 @@ func GetOrderByID(c *fiber.Ctx) error {
 	}
 
 	if result.RowsAffected == 0 {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"err":     false,
 			"message": "no data",
 		})
@@ -147,7 +147,7 @@ func GetOrderByID(c *fiber.Ctx) error {
 	defer rows.Close()
 
 	if err != nil {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when querying database for order_details",
 		})
@@ -187,13 +187,13 @@ func GetOrdersForUser(c *fiber.Ctx) error {
 		Find(&orders)
 
 	if result.Error != nil {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when querying database",
 		})
 	}
 	if result.RowsAffected == 0 {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"err":     true,
 			"message": "no orders yet",
 		})
@@ -260,7 +260,7 @@ func GetOrdersForUserByID(c *fiber.Ctx) error {
 	rows, err := getOrderDetails(order.ID)
 
 	if err != nil {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when quering database for order details",
 		})
@@ -308,7 +308,7 @@ func GetOrdersForUserByID(c *fiber.Ctx) error {
 func CreateNewOrder(c *fiber.Ctx) error {
 	userID, err := uuid.Parse(c.Locals("user_id").(string))
 	if err != nil {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when parsing user id",
 		})

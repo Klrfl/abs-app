@@ -9,28 +9,28 @@ import (
 )
 
 func GetUsers(c *fiber.Ctx) error {
-	members := new([]models.User)
+	users := new([]models.User)
 
 	result := database.DB.
 		Preload("Role").
-		Find(&members)
+		Find(&users)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
-			"message": "error when querying database",
+			"message": "error when querying database for users",
 		})
 	}
 	if result.RowsAffected == 0 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"err":     false,
-			"message": "no data",
+			"message": users,
 		})
 	}
 
 	return c.JSON(fiber.Map{
 		"err":  false,
-		"data": members,
+		"data": users,
 	})
 }
 
@@ -40,15 +40,15 @@ func GetUserByID(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
-			"message": "error when parsing member id",
+			"message": "ID not valid",
 		})
 	}
 
-	member := new(models.User)
+	user := new(models.User)
 	result := database.DB.
 		Preload("Role").
 		Limit(1).
-		Find(&member, "id = ?", id)
+		Find(&user, "id = ?", id)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -65,7 +65,7 @@ func GetUserByID(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"err":  false,
-		"data": member,
+		"data": user,
 	})
 }
 
@@ -75,7 +75,7 @@ func CreateNewUser(c *fiber.Ctx) error {
 	if err := c.BodyParser(newUser); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
-			"message": "Something wrong with your data",
+			"message": "Something wrong with user payload",
 		})
 	}
 
@@ -90,7 +90,7 @@ func CreateNewUser(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"err":     false,
-		"message": "member successfully created",
+		"message": "user successfully created",
 	})
 }
 
@@ -107,12 +107,12 @@ func DeleteUser(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
-			"message": "error when parsing member id",
+			"message": "error when parsing user ID",
 		})
 	}
 
-	member := new(models.User)
-	result := database.DB.Where("id = ?", id).Delete(member)
+	user := new(models.User)
+	result := database.DB.Where("id = ?", id).Delete(user)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -123,6 +123,6 @@ func DeleteUser(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"err":     false,
-		"message": "member successfully deleted",
+		"message": "user successfully deleted",
 	})
 }

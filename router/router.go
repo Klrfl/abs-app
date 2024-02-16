@@ -37,12 +37,12 @@ func SetupRoutes(app *fiber.App) {
 	// admin routes
 	adminRoute := app.Group("/admin", middleware.ValidateAdminJWT)
 
-	memberRoute := adminRoute.Group("/users")
-	memberRoute.Get("/", handlers.GetUsers)
-	memberRoute.Post("/", handlers.CreateNewUser)
-	memberRoute.Get("/:id", handlers.GetUserByID)
-	memberRoute.Patch("/:id", handlers.UpdateUserData)
-	memberRoute.Delete("/:id", handlers.DeleteUser)
+	userRoute := adminRoute.Group("/users")
+	userRoute.Get("/", handlers.GetUsers)
+	userRoute.Post("/", handlers.CreateNewUser)
+	userRoute.Get("/:id", handlers.GetUserByID)
+	userRoute.Patch("/:id", handlers.UpdateUserData)
+	userRoute.Delete("/:id", handlers.DeleteUser)
 
 	adminOrdersRoute := adminRoute.Group("/orders")
 	adminOrdersRoute.Get("/", handlers.GetPendingOrders)

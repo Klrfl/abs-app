@@ -25,7 +25,7 @@ func Signup(c *fiber.Ctx) error {
 	generatedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), 14)
 
 	if err != nil {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when signing up user",
 		})
@@ -36,7 +36,7 @@ func Signup(c *fiber.Ctx) error {
 	result := database.DB.Create(&newUser)
 
 	if result.Error != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
 			"message": "email already exists",
 		})
@@ -80,7 +80,7 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(incomingUser.Password)); err != nil {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"err":     true,
 			"message": "wrong email or password",
 		})

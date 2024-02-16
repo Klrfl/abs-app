@@ -102,7 +102,7 @@ func GetMenu(c *fiber.Ctx) error {
 			Find(&variantValues).Error
 
 		if err != nil {
-			return c.JSON(fiber.Map{
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"err":     true,
 				"message": "error when querying database",
 			})
@@ -156,7 +156,7 @@ func GetMenuItemByID(c *fiber.Ctx) error {
 		Find(&variantValues).Error
 
 	if err != nil {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when querying database",
 		})
@@ -236,7 +236,7 @@ func DeleteMenuItem(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 
 	if err != nil {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
 			"message": "ID not valid",
 		})
