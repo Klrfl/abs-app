@@ -21,20 +21,29 @@ will run automatically when you run the command `go run .`. Sample data is comin
 
 ### Todo
 
-- implement Authentication/Authorization
-- implement ordering for anonymous members (e.g. most people)
-- make a frontend application (maybe in a separate repo)
+- ~~Implement auth~~
+- implement ordering
+  - for anonymous user (e.g. most people)
+  - ~~for authenticated users~~
+- make a frontend application (maybe as a separate project)
 - make `.sql` file for database migrations
+- make API documentation, preferrably a dedicated site
+- make this api use docker lmao probably don't
 
 After all setup is done, you can go ahead an run `go run .` to run the API.
 
 ## How to use
 
-There are three main endpoints on each you can do CRUD operations:
+For the end user, are two main endpoints on each you can do CRUD operations:
 
-- `/menu`
-- `/members`
-- `/orders`
+- `/api/menu`
+- `/api/orders`
 
-Each item in `/menu` also has `/variant-values` which contajins each menu's variants
+Each item in `/menu` also has `/variant-values` which contains each menu's variants
 and respective prices.
+
+There are also three endpoints for the admin:
+
+- `/admin/menu`
+- `/admin/users`
+- `/admin/orders`
