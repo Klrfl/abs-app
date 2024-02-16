@@ -3,6 +3,7 @@ package handlers
 import (
 	"abs-app/database"
 	"abs-app/models"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -97,9 +98,60 @@ func CreateNewUser(c *fiber.Ctx) error {
 }
 
 func UpdateUserData(c *fiber.Ctx) error {
-	return c.Status(fiber.StatusNoContent).JSON(fiber.Map{
+	userID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "invalid user ID",
+		})
+	}
+
+	incomingUser, existingUser := new(models.User), new(models.User)
+
+	if err := c.BodyParser(&incomingUser); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "something wrong with user payload",
+		})
+	}
+
+	result := database.DB.
+		Where("id = ?", userID).
+		Find(&existingUser)
+
+	if result.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when querying database",
+		})
+	}
+	if result.RowsAffected == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"err":     false,
+			"message": "no user found",
+		})
+	}
+
+	result = database.DB.
+		Where("id = ?", userID).
+		Updates(&incomingUser)
+
+	if result.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when updating user",
+		})
+	}
+	if result.RowsAffected == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"err":     false,
+			"message": "error doesn't work",
+		})
+	}
+
+	return c.JSON(fiber.Map{
 		"err":     false,
-		"message": "not implemented yet",
+		"message": fmt.Sprintf("user with ID %s successfully updated", userID),
 	})
 }
 
@@ -114,7 +166,9 @@ func DeleteUser(c *fiber.Ctx) error {
 	}
 
 	user := new(models.User)
-	result := database.DB.Where("id = ?", id).Delete(user)
+	result := database.DB.
+		Where("id = ?", id).
+		Delete(user)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -126,5 +180,82 @@ func DeleteUser(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"err":     false,
 		"message": "user successfully deleted",
+	})
+}
+
+func GetUserForUser(c *fiber.Ctx) error {
+	userID, err := uuid.Parse(c.Locals("user_id").(string))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"messgae": "user ID not valid",
+		})
+	}
+
+	existingUser := new(models.User)
+
+	err = database.DB.
+		Preload("Role").
+		Where("id = ?", userID).
+		Omit("password").
+		Find(&existingUser).Error
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when querying database for user",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"err":     true,
+		"message": existingUser,
+	})
+}
+
+func UpdateUserDataForUser(c *fiber.Ctx) error {
+	userID, err := uuid.Parse(c.Locals("user_id").(string))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"messgae": "user ID not valid",
+		})
+	}
+
+	existingUser, incomingUser := new(models.User), new(models.User)
+
+	if err := c.BodyParser(&incomingUser); err != nil {
+		return c.JSON(fiber.Map{
+			"err":     true,
+			"message": "something wrong with user payload",
+		})
+	}
+
+	err = database.DB.
+		Preload("Role").
+		Where("id = ?", userID).
+		Find(&existingUser).Error
+
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"err":     true,
+			"message": "error when querying database for user",
+		})
+	}
+
+	err = database.DB.
+		Where("id = ?", userID).
+		Updates(&incomingUser).Error
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when updating user data",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"err":     true,
+		"message": "user data succesfully updated",
 	})
 }

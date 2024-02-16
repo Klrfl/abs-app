@@ -27,8 +27,10 @@ func SetupRoutes(app *fiber.App) {
 
 	api.Use(middleware.ValidateUserJWT)
 
-	// TODO: make separate handlers for getting orders for user only
-	// or modify handler
+	userRoute := api.Group("/user")
+	userRoute.Get("/", handlers.GetUserForUser)
+	userRoute.Patch("/", handlers.UpdateUserDataForUser)
+
 	ordersRoute := api.Group("/orders")
 	ordersRoute.Get("/", handlers.GetOrdersForUser)
 	ordersRoute.Get("/:id", handlers.GetOrdersForUserByID)
@@ -37,12 +39,12 @@ func SetupRoutes(app *fiber.App) {
 	// admin routes
 	adminRoute := app.Group("/admin", middleware.ValidateAdminJWT)
 
-	userRoute := adminRoute.Group("/users")
-	userRoute.Get("/", handlers.GetUsers)
-	userRoute.Post("/", handlers.CreateNewUser)
-	userRoute.Get("/:id", handlers.GetUserByID)
-	userRoute.Patch("/:id", handlers.UpdateUserData)
-	userRoute.Delete("/:id", handlers.DeleteUser)
+	adminUsersRoute := adminRoute.Group("/users")
+	adminUsersRoute.Get("/", handlers.GetUsers)
+	adminUsersRoute.Post("/", handlers.CreateNewUser)
+	adminUsersRoute.Get("/:id", handlers.GetUserByID)
+	adminUsersRoute.Patch("/:id", handlers.UpdateUserData)
+	adminUsersRoute.Delete("/:id", handlers.DeleteUser)
 
 	adminOrdersRoute := adminRoute.Group("/orders")
 	adminOrdersRoute.Get("/", handlers.GetPendingOrders)
