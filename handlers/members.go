@@ -13,6 +13,7 @@ func GetUsers(c *fiber.Ctx) error {
 
 	result := database.DB.
 		Preload("Role").
+		Omit("password").
 		Find(&users)
 
 	if result.Error != nil {
@@ -48,6 +49,7 @@ func GetUserByID(c *fiber.Ctx) error {
 	result := database.DB.
 		Preload("Role").
 		Limit(1).
+		Omit("password").
 		Find(&user, "id = ?", id)
 
 	if result.Error != nil {
