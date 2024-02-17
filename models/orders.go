@@ -17,15 +17,15 @@ type Order struct {
 
 type OrderDetail struct {
 	OrderID           uuid.UUID `json:"order_id" gorm:"primaryKey;type:uuid;onDelete:CASCADE"`
-	MenuID            uuid.UUID `json:"menu_id" gorm:"primaryKey;type:uuid"`
-	MenuName          string    `json:"menu_name"`
-	MenuType          string    `json:"menu_type"`
-	MenuOptionID      int       `json:"menu_option_id"`
-	MenuOption        string    `json:"menu_option"`
-	MenuOptionValueID int       `json:"menu_option_value_id"`
-	MenuOptionValue   string    `json:"menu_option_value"`
-	Quantity          int       `json:"quantity"`
-	TotalPrice        int       `json:"total_price"`
+	MenuID            uuid.UUID `json:"menu_id" gorm:"primaryKey;type:uuid;column:menu_id"`
+	MenuName          string    `json:"menu_name" gorm:"column:menu_name"`
+	MenuType          string    `json:"menu_type" gorm:"column:menu_type"`
+	MenuOptionID      int       `json:"menu_option_id" gorm:"column:menu_option_id"`
+	MenuOption        string    `json:"menu_option" gorm:"column:menu_option"`
+	MenuOptionValueID int       `json:"menu_option_value_id" gorm:"column:menu_option_value_id"`
+	MenuOptionValue   string    `json:"menu_option_value" gorm:"column:menu_option_value"`
+	Quantity          int       `json:"quantity" gorm:"column:quantity"`
+	TotalPrice        int       `json:"total_price" gorm:"column:total_price"`
 }
 
 type BaseOrderDetail struct {
