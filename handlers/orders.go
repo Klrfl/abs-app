@@ -5,7 +5,6 @@ import (
 	"abs-app/models"
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -42,7 +41,7 @@ func GetPendingOrders(c *fiber.Ctx) error {
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"err":     true,
-				"message": "error when processing user ID`",
+				"message": "error when processing user ID",
 			})
 		}
 
@@ -82,7 +81,7 @@ func GetPendingOrders(c *fiber.Ctx) error {
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"err":     true,
-				"message": "error when querying database for order_details",
+				"message": "error when querying database for order details",
 			})
 		}
 
@@ -149,7 +148,7 @@ func GetOrderByID(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
-			"message": "error when querying database for order_details",
+			"message": "error when querying database for order details",
 		})
 	}
 
@@ -241,13 +240,12 @@ func GetOrdersForUserByID(c *fiber.Ctx) error {
 	orderID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"err":    true,
-			"messge": "invalid order id",
+			"err":     true,
+			"message": "invalid order ID",
 		})
 	}
 
 	userID := c.Locals("user_id")
-	log.Println("user_id")
 
 	order := new(models.Order)
 	result := database.DB.
@@ -295,7 +293,7 @@ func GetOrdersForUserByID(c *fiber.Ctx) error {
 	if result.RowsAffected == 0 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"err":     false,
-			"message": fmt.Sprintf("order with id %s doesn't exist", orderID),
+			"message": fmt.Sprintf("order with ID %s doesn't exist", orderID),
 		})
 	}
 
@@ -310,7 +308,7 @@ func CreateNewOrder(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
-			"message": "error when parsing user id",
+			"message": "error when parsing user ID",
 		})
 	}
 
@@ -331,7 +329,7 @@ func CreateNewOrder(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
-			"message": "error when querying database",
+			"message": "error when placing new order",
 		})
 	}
 
