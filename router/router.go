@@ -3,6 +3,7 @@ package router
 import (
 	"abs-app/handlers"
 	"abs-app/middleware"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -13,7 +14,10 @@ import (
 func SetupRoutes(app *fiber.App) {
 	app.Use(logger.New())
 	app.Use(cors.New())
-	app.Use(limiter.New())
+	app.Use(limiter.New(limiter.Config{
+		Max:        30,
+		Expiration: 30 * time.Second,
+	}))
 
 	app.Post("/login", handlers.Login)
 	app.Post("/logout", handlers.Logout)
