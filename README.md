@@ -22,10 +22,13 @@ will run automatically when you run the command `go run .`. Sample data is comin
 ### Todo
 
 - ~~Implement auth~~
+- implement limiting
+  - increase limit
 - implement ordering
   - for anonymous user (e.g. most people)
   - ~~for authenticated users~~
-- make a frontend application (maybe as a separate project)
+  - omit password field in orders
+- make a frontend application (as a monorepo)
 - make `.sql` file for database migrations
 - make API documentation, preferrably a dedicated site
 - make this api use docker lmao probably don't
