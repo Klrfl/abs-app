@@ -104,7 +104,7 @@ func GetOrderByID(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
-			"message": "error when processing order id",
+			"message": "error when processing order ID",
 		})
 	}
 
@@ -305,7 +305,7 @@ func CreateNewOrder(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
-			"message": "error when inserting order details",
+			"message": "error when inserting order details: make sure option_id or option_value_id for menu type is correct",
 		})
 	}
 
