@@ -275,12 +275,15 @@ func CreateNewOrder(c *fiber.Ctx) error {
 		})
 	}
 
+	tx := database.DB.Begin()
+
 	newOrder.ID = uuid.New()
 	newOrder.UserID = userID
-
-	result := database.DB.Create(&newOrder)
+	result := tx.Create(&newOrder)
 
 	if result.Error != nil {
+		tx.Rollback()
+
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when placing new order",
@@ -300,14 +303,17 @@ func CreateNewOrder(c *fiber.Ctx) error {
 		newOrderDetails = append(newOrderDetails, newOrderDetail)
 	}
 
-	result = database.DB.Create(newOrderDetails)
+	result = tx.Create(newOrderDetails)
 
 	if result.Error != nil {
+		tx.Rollback()
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when inserting order details: make sure option_id or option_value_id for menu type is correct",
 		})
 	}
+
+	tx.Commit()
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"err":     false,
@@ -328,6 +334,7 @@ func CompleteOrder(c *fiber.Ctx) error {
 	order := new(models.Order)
 
 	order.ID = orderID
+	order.IsCompleted = true
 	order.CompletedAt = time.Now()
 	result := database.DB.Updates(&order)
 
@@ -347,6 +354,6 @@ func CompleteOrder(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"err":     false,
-		"message": "order completed",
+		"message": fmt.Sprintf("order of ID %s successfully completed", orderID),
 	})
 }
