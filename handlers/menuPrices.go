@@ -52,18 +52,22 @@ func InsertNewPrices(c *fiber.Ctx) error {
 	for _, newVariantValue := range *newVariantValues {
 		newVariantValue.MenuID = id
 	}
-	result = database.DB.Create(&newVariantValues)
+
+	tx := database.DB.Begin()
+	result = tx.Create(&newVariantValues)
 
 	menuItem.UpdatedAt = time.Now()
-	result2 := database.DB.Updates(&menuItem)
+	result2 := tx.Updates(&menuItem)
 
 	if result.Error != nil || result2.Error != nil {
+		tx.Rollback()
 		return c.JSON(fiber.Map{
 			"err":     true,
 			"message": "error when inserting new prices",
 		})
 	}
 
+	tx.Commit()
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"err":     false,
 		"message": fmt.Sprintf("prices for menu item with ID %s sucessfully updated", id),
@@ -137,21 +141,24 @@ func UpdatePrices(c *fiber.Ctx) error {
 		newVariantValue.OptionID = variantValue.NewOptionID
 		newVariantValue.Price = variantValue.Price
 
-		result = database.DB.
+		tx := database.DB.Begin()
+		result = tx.
 			Model(&models.VariantValue{}).
 			Where("menu_id = ? AND option_id = ? AND option_value_id = ?", id, variantValue.OptionID, variantValue.OptionValueID).
 			Updates(&newVariantValue)
 
 		menuItem.UpdatedAt = time.Now()
-		result2 := database.DB.Updates(&menuItem)
+		result2 := tx.Updates(&menuItem)
 
 		if result.Error != nil || result2.Error != nil {
+			tx.Rollback()
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"err":     true,
 				"message": "something went wrong when updating prices",
 			})
 		}
 
+		tx.Commit()
 		if result.RowsAffected == 0 {
 			return c.JSON(fiber.Map{
 				"err":     true,
@@ -177,6 +184,7 @@ func DeletePrice(c *fiber.Ctx) error {
 	}
 
 	menuItem := new(models.Menu)
+
 	result := database.DB.
 		Limit(1).
 		Where("id = ?", id).
@@ -198,7 +206,9 @@ func DeletePrice(c *fiber.Ctx) error {
 
 	OptionID := c.QueryInt("option_id")
 	OptionValueID := c.QueryInt("option_value_id")
-	result = database.DB.
+
+	tx := database.DB.Begin()
+	result = tx.
 		Where("option_id = ? AND option_value_id = ?", OptionID, OptionValueID).
 		Delete(&models.VariantValue{}, id)
 
@@ -206,6 +216,7 @@ func DeletePrice(c *fiber.Ctx) error {
 	result2 := database.DB.Updates(&menuItem)
 
 	if result.Error != nil || result2.Error != nil {
+		tx.Rollback()
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when deleting prices of menu item from database",
@@ -213,12 +224,14 @@ func DeletePrice(c *fiber.Ctx) error {
 	}
 
 	if result.RowsAffected == 0 {
+		tx.Rollback()
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": fmt.Sprintf("failed to delete menu item with id %s", id),
 		})
 	}
 
+	tx.Commit()
 	return c.JSON(fiber.Map{
 		"err":     false,
 		"message": fmt.Sprintf("prices of menu item with id %s successfully deleted", id),

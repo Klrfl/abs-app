@@ -27,21 +27,25 @@ func Signup(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
-			"message": "error when signing up user",
+			"message": "error when generating user",
 		})
 	}
 
 	newUser.Password = string(generatedPassword)
 	newUser.RoleID = 1
-	result := database.DB.Create(&newUser)
+
+	tx := database.DB.Begin()
+	result := tx.Create(&newUser)
 
 	if result.Error != nil {
+		tx.Rollback()
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
-			"message": "email already exists",
+			"message": "error when signing up user",
 		})
 	}
 
+	tx.Commit()
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"err":     false,
 		"message": "signup success! redirect user to login page",

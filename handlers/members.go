@@ -82,15 +82,18 @@ func CreateNewUser(c *fiber.Ctx) error {
 		})
 	}
 
-	result := database.DB.Save(&newUser)
+	tx := database.DB.Begin()
+	result := tx.Save(&newUser)
 
 	if result.Error != nil {
+		tx.Rollback()
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     false,
 			"message": "error when querying database",
 		})
 	}
 
+	tx.Commit()
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"err":     false,
 		"message": "user successfully created",
@@ -132,23 +135,27 @@ func UpdateUserData(c *fiber.Ctx) error {
 		})
 	}
 
-	result = database.DB.
+	tx := database.DB.Begin()
+	result = tx.
 		Where("id = ?", userID).
 		Updates(&incomingUser)
 
 	if result.Error != nil {
+		tx.Rollback()
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when updating user",
 		})
 	}
 	if result.RowsAffected == 0 {
+		tx.Rollback()
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"err":     false,
 			"message": "error doesn't work",
 		})
 	}
 
+	tx.Commit()
 	return c.JSON(fiber.Map{
 		"err":     false,
 		"message": fmt.Sprintf("user with ID %s successfully updated", userID),
@@ -166,17 +173,21 @@ func DeleteUser(c *fiber.Ctx) error {
 	}
 
 	user := new(models.User)
-	result := database.DB.
+
+	tx := database.DB.Begin()
+	result := tx.
 		Where("id = ?", id).
 		Delete(user)
 
 	if result.Error != nil {
+		tx.Rollback()
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when querying database",
 		})
 	}
 
+	tx.Commit()
 	return c.JSON(fiber.Map{
 		"err":     false,
 		"message": "user successfully deleted",
@@ -243,17 +254,20 @@ func UpdateUserDataForUser(c *fiber.Ctx) error {
 		})
 	}
 
-	err = database.DB.
+	tx := database.DB.Begin()
+	err = tx.
 		Where("id = ?", userID).
 		Updates(&incomingUser).Error
 
 	if err != nil {
+		tx.Rollback()
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when updating user data",
 		})
 	}
 
+	tx.Commit()
 	return c.JSON(fiber.Map{
 		"err":     true,
 		"message": "user data succesfully updated",

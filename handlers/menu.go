@@ -25,11 +25,13 @@ func CreateNewMenuItem(c *fiber.Ctx) error {
 	newMenuItem.Name = incomingMenuItem.Name
 	newMenuItem.TypeID = incomingMenuItem.TypeID
 
-	error := database.DB.
+	tx := database.DB.Begin()
+	error := tx.
 		Select("Name", "TypeID").
 		Create(&newMenuItem).Error
 
 	if error != nil {
+		tx.Rollback()
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when inserting new menu data to database",
@@ -41,15 +43,18 @@ func CreateNewMenuItem(c *fiber.Ctx) error {
 	for _, newVariantValue := range newVariantValues {
 		newVariantValue.MenuID = newMenuItem.ID
 	}
-	error = database.DB.Create(&newVariantValues).Error
 
-	if error != nil {
+	result := tx.Create(&newVariantValues)
+
+	if result.Error != nil || result.RowsAffected == 0 {
+		tx.Rollback()
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when inserting new menu data to database",
 		})
 	}
 
+	tx.Commit()
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"err":     false,
 		"message": "new menu item successfully created",
@@ -166,7 +171,6 @@ func GetMenuItemByID(c *fiber.Ctx) error {
 }
 
 func UpdateMenuItem(c *fiber.Ctx) error {
-	c.Accepts("application/json")
 	id, err := uuid.Parse(c.Params("id"))
 
 	if err != nil {
@@ -202,8 +206,10 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 		})
 	}
 
+	tx := database.DB.Begin()
+
 	incomingMenuItem.UpdatedAt = time.Now()
-	error1 := database.DB.
+	error1 := tx.
 		Model(&models.Menu{}).
 		Where("id = ?", id).
 		Updates(&incomingMenuItem).Error
@@ -213,18 +219,20 @@ func UpdateMenuItem(c *fiber.Ctx) error {
 		newVariantValue.MenuID = existingMenuItem.ID
 	}
 
-	error2 := database.DB.
+	error2 := tx.
 		Model(&models.VariantValue{}).
 		Where("menu_id = ?", id).
 		Updates(&newVariantValues).Error
 
 	if error1 != nil || error2 != nil {
+		tx.Rollback()
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when updating menu item",
 		})
 	}
 
+	tx.Commit()
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"err":     false,
 		"message": "Drink data successfully updated",
@@ -241,23 +249,28 @@ func DeleteMenuItem(c *fiber.Ctx) error {
 		})
 	}
 
-	result := database.DB.
+	tx := database.DB.Begin()
+
+	result := tx.
 		Select("VariantValues").
 		Delete(&models.Menu{ID: id})
 
 	if result.Error != nil {
+		tx.Rollback()
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when querying database",
 		})
 	}
 	if result.RowsAffected == 0 {
+		tx.Rollback()
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
 			"message": "delete didn't work - item already deleted or does not exist",
 		})
 	}
 
+	tx.Commit()
 	return c.JSON(fiber.Map{
 		"err":     false,
 		"message": "menu item successfully deleted",
@@ -274,21 +287,25 @@ func DeleteMenuItems(c *fiber.Ctx) error {
 		})
 	}
 
-	result := database.DB.Delete(&models.Menu{}, menuIDs)
+	tx := database.DB.Begin()
+	result := tx.Delete(&models.Menu{}, menuIDs)
 
 	if result.Error != nil {
+		tx.Rollback()
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "something went wrong when deleting menu items from database",
 		})
 	}
 	if result.RowsAffected == 0 {
+		tx.Rollback()
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "delete doesn't work",
 		})
 	}
 
+	tx.Commit()
 	return c.JSON(fiber.Map{
 		"err":     false,
 		"message": "menu items successfully deleted",

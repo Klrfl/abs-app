@@ -59,14 +59,12 @@ func GetPendingOrders(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when querying database",
-			"data":    orders,
 		})
 	}
 	if result.RowsAffected == 0 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"err":     false,
-			"message": "no orders yet",
-			"data":    orders,
+			"message": "no orders",
 		})
 	}
 
