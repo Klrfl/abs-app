@@ -26,7 +26,7 @@ func decodeToken(tokenString string, key string) (*jwt.Token, error) {
 }
 
 func ValidateUserJWT(c *fiber.Ctx) error {
-	// verify tokenString and refresh if less then 20 minutes
+	//TODO: verify tokenString and refresh if less then 20 minutes
 	tokenString := c.Cookies("token")
 	key := os.Getenv("SECRET")
 
@@ -43,7 +43,7 @@ func ValidateUserJWT(c *fiber.Ctx) error {
 		c.Locals("user_id", claims["ID"])
 		expiryTime := claims["exp"].(float64)
 
-		// refresh token or abort request
+		// TODO: refresh token
 		if int64(expiryTime) < time.Now().Unix() {
 			c.Cookie(&fiber.Cookie{
 				Name:  "token",

@@ -115,7 +115,6 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	// then set a cookie
 	c.Cookie(&fiber.Cookie{
 		Name:     "token",
 		Value:    signedToken,

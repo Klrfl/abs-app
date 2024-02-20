@@ -14,30 +14,39 @@ Clone this repo and then `cd` into it. To develop this app locally first you mus
 have go installed on your machine. If you already have Go, install all dependencies
 with the command `go get .`.
 
+After all setup is done, you can go ahead and run `go run .`, and Fiber will tell
+you that the server is running on `localhost:8080`.
+
 ### Database
 
 This project uses PostgreSQL. Install it locally on your machine, database migrations
-will run automatically when you run the command `go run .`. Sample data is coming soon
+will run automatically when you run the command `go run .`. For now, the seeder only
+has the user roles and one admin user.
+
+Complete sample data is coming soon
 
 ### Todo
 
+In order of priority.
+
 - ~~Implement auth~~
-- implement limiting
-  - increase limit
+  - implement refresh token
 - implement ordering
   - for anonymous user (e.g. most people)
   - ~~for authenticated users~~
+  - ~~implement order completion~~
   - omit password field in orders
-- make a frontend application (as a monorepo)
+- ~~implement limiting~~
 - make `.sql` file for database migrations
+  - insert menu data
 - make API documentation, preferrably a dedicated site
-- make this api use docker lmao probably don't
-
-After all setup is done, you can go ahead an run `go run .` to run the API.
+- make a frontend application, probably with Vue again or Svelte (as a monorepo)
+- migrate this API to use Docker (lmao I will probably not do this)
+- final configurations and deploy!!
 
 ## How to use
 
-For the end user, are two main endpoints on each you can do CRUD operations:
+For the end user/application, are two main endpoints on each you can do CRUD operations:
 
 - `/api/menu`
 - `/api/orders`
