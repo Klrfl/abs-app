@@ -15,7 +15,7 @@ func SetupRoutes(app *fiber.App) {
 	app.Use(logger.New())
 	app.Use(cors.New())
 	app.Use(limiter.New(limiter.Config{
-		Max:        30,
+		Max:        20,
 		Expiration: 30 * time.Second,
 	}))
 
