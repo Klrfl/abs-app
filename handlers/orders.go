@@ -35,13 +35,14 @@ func getOrderDetails(orderID uuid.UUID) ([]*models.OrderDetail, error) {
 
 }
 
-func GetPendingOrders(c *fiber.Ctx) error {
+func GetOrders(c *fiber.Ctx) error {
 	var orders []*models.Order
-
 	var result *gorm.DB
+	userIDQuery := c.Query("user_id")
+	isCompletedQuery := c.QueryBool("is_completed", false)
 
-	if c.Query("user_id") != "" {
-		orderID, err := uuid.Parse(c.Query("user_id"))
+	if userIDQuery != "" {
+		orderID, err := uuid.Parse(userIDQuery)
 
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -53,13 +54,13 @@ func GetPendingOrders(c *fiber.Ctx) error {
 		result = database.DB.
 			Preload("User").
 			Preload("User.Role").
-			Where("users.id = ? AND is_completed = ?", orderID, false).
+			Where("user_id = ? AND is_completed = ?", orderID, isCompletedQuery).
 			Find(&orders)
 	} else {
 		result = database.DB.
 			Preload("User").
 			Preload("User.Role").
-			Where("is_completed = ?", false).
+			Where("is_completed = ?", isCompletedQuery).
 			Find(&orders)
 	}
 
