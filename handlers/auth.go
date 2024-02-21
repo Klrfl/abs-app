@@ -32,7 +32,6 @@ func Signup(c *fiber.Ctx) error {
 	}
 
 	newUser.Password = string(generatedPassword)
-	newUser.RoleID = 1
 
 	tx := database.DB.Begin()
 	result := tx.Create(&newUser)
