@@ -297,6 +297,90 @@ func CreateNewOrder(c *fiber.Ctx) error {
 	})
 }
 
+func CreateNewAnonymousOrder(c *fiber.Ctx) error {
+	newOrder, incomingOrder := new(models.Order), new(models.AnonOrder)
+
+	if err := c.BodyParser(&incomingOrder); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "something wrong with request payload",
+		})
+	}
+
+	// look for anon user, bind order to existing user based on name in incomingOrder
+	// if not exists then create new one
+
+	tx := database.DB.Begin()
+
+	anonUser := new(models.User)
+	result := tx.
+		Limit(1).
+		Where("email = ? AND name ILIKE ?", "anonymous", fmt.Sprintf("%%%s%%", incomingOrder.UserName)).
+		Find(&anonUser)
+
+	if result.Error != nil {
+		tx.Rollback()
+		return c.JSON(fiber.Map{
+			"err":     true,
+			"message": "error when querying database for anon user",
+		})
+	}
+
+	if result.RowsAffected == 0 {
+		anonUser.Name = incomingOrder.UserName
+		anonUser.Email = "anonymous"
+		anonUser.Password = "anonymous"
+
+		tx.Create(&anonUser)
+	}
+
+	tx.Commit()
+
+	// new tx for order
+	tx = database.DB.Begin()
+	newOrder.UserID = anonUser.ID
+	newOrder.CreatedAt = time.Now()
+
+	result = tx.Create(newOrder)
+
+	if result.Error != nil {
+		tx.Rollback()
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when placing new order",
+		})
+	}
+
+	var newOrderDetails []models.BaseOrderDetail
+	for _, incomingOrderDetail := range incomingOrder.OrderDetails {
+		var newOrderDetail models.BaseOrderDetail
+		newOrderDetail.OrderID = newOrder.ID
+		newOrderDetail.MenuID = incomingOrderDetail.MenuID
+		newOrderDetail.MenuOptionID = incomingOrderDetail.MenuOptionID
+		newOrderDetail.MenuOptionValueID = incomingOrderDetail.MenuOptionValueID
+		newOrderDetail.Quantity = incomingOrderDetail.Quantity
+
+		newOrderDetails = append(newOrderDetails, newOrderDetail)
+	}
+
+	result = tx.Create(newOrderDetails)
+
+	if result.Error != nil {
+		tx.Rollback()
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when inserting order details: make sure option_id or option_value_id for menu type is correct",
+		})
+	}
+
+	tx.Commit()
+
+	return c.JSON(fiber.Map{
+		"err":     false,
+		"message": fmt.Sprintf("order for %s successfully created", anonUser.Name),
+	})
+}
+
 func CompleteOrder(c *fiber.Ctx) error {
 	orderID, err := uuid.Parse(c.Params("id"))
 

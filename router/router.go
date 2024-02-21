@@ -29,6 +29,8 @@ func SetupRoutes(app *fiber.App) {
 	menuRoute.Get("/", handlers.GetMenu)
 	menuRoute.Get("/:id", handlers.GetMenuItemByID)
 
+	api.Post("/orders", handlers.CreateNewAnonymousOrder)
+
 	api.Use(middleware.ValidateUserJWT)
 
 	userRoute := api.Group("/user")

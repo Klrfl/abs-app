@@ -31,8 +31,8 @@ In order of priority.
 
 - ~~Implement auth~~
   - implement refresh token
-- implement ordering
-  - for anonymous user (e.g. most people)
+- ~~implement ordering~~
+  - ~~for anonymous user (e.g. most people)~~
   - ~~for authenticated users~~
   - ~~implement order completion~~
   - omit password field in orders

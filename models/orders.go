@@ -15,6 +15,11 @@ type Order struct {
 	OrderDetails []*OrderDetail `json:"order_details"`
 }
 
+type AnonOrder struct {
+	UserName     string         `json:"username"`
+	OrderDetails []*OrderDetail `json:"order_details"`
+}
+
 type OrderDetail struct {
 	OrderID           uuid.UUID `json:"order_id" gorm:"primaryKey;type:uuid;onDelete:CASCADE"`
 	MenuID            uuid.UUID `json:"menu_id" gorm:"primaryKey;type:uuid;column:menu_id"`
