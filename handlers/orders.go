@@ -3,7 +3,6 @@ package handlers
 import (
 	"abs-app/database"
 	"abs-app/models"
-	"database/sql"
 	"fmt"
 	"time"
 
@@ -12,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func getOrderDetails(orderID uuid.UUID) (*sql.Rows, error) {
+func getOrderDetails(orderID uuid.UUID) ([]*models.OrderDetail, error) {
 	rows, err := database.DB.
 		Model(&models.OrderDetail{}).
 		Select("order_details.order_id, menu.id as menu_id, menu.name as menu_name, menu_types.type as menu_type, menu_available_options.id as menu_option_id, menu_available_options.option as menu_option, menu_option_values.id as menu_option_value_id, menu_option_values.value as menu_option_value, order_details.quantity, order_details.quantity * variant_values.price as total_price").
@@ -24,7 +23,16 @@ func getOrderDetails(orderID uuid.UUID) (*sql.Rows, error) {
 		Where("order_details.order_id = ?", orderID).
 		Rows()
 
-	return rows, err
+	defer rows.Close()
+	var orderDetails []*models.OrderDetail
+
+	for rows.Next() {
+		var orderDetail models.OrderDetail
+		database.DB.ScanRows(rows, &orderDetail)
+		orderDetails = append(orderDetails, &orderDetail)
+	}
+	return orderDetails, err
+
 }
 
 func GetPendingOrders(c *fiber.Ctx) error {
@@ -69,10 +77,7 @@ func GetPendingOrders(c *fiber.Ctx) error {
 	}
 
 	for _, order := range orders {
-		var orderDetails []*models.OrderDetail
-
-		rows, err := getOrderDetails(order.ID)
-		defer rows.Close()
+		orderDetails, err := getOrderDetails(order.ID)
 
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -80,13 +85,6 @@ func GetPendingOrders(c *fiber.Ctx) error {
 				"message": "error when querying database for order details",
 			})
 		}
-
-		for rows.Next() {
-			var orderDetail models.OrderDetail
-			database.DB.ScanRows(rows, &orderDetail)
-			orderDetails = append(orderDetails, &orderDetail)
-		}
-
 		order.OrderDetails = orderDetails
 	}
 
@@ -126,9 +124,7 @@ func GetOrderByID(c *fiber.Ctx) error {
 		})
 	}
 
-	var orderDetails []*models.OrderDetail
-	rows, err := getOrderDetails(order.ID)
-	defer rows.Close()
+	orderDetails, err := getOrderDetails(order.ID)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -137,11 +133,7 @@ func GetOrderByID(c *fiber.Ctx) error {
 		})
 	}
 
-	for rows.Next() {
-		var orderDetail models.OrderDetail
-		database.DB.ScanRows(rows, &orderDetail)
-		orderDetails = append(orderDetails, &orderDetail)
-	}
+	order.OrderDetails = orderDetails
 
 	return c.JSON(fiber.Map{
 		"err":  false,
@@ -173,21 +165,13 @@ func GetOrdersForUser(c *fiber.Ctx) error {
 	}
 
 	for _, order := range orders {
-		rows, err := getOrderDetails(order.ID)
-		defer rows.Close()
+		orderDetails, err := getOrderDetails(order.ID)
 
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"err":     true,
 				"message": "error when querying database for order details",
 			})
-		}
-
-		var orderDetails []*models.OrderDetail
-		for rows.Next() {
-			var orderDetail models.OrderDetail
-			database.DB.ScanRows(rows, &orderDetail)
-			orderDetails = append(orderDetails, &orderDetail)
 		}
 
 		order.OrderDetails = orderDetails
@@ -218,20 +202,13 @@ func GetOrdersForUserByID(c *fiber.Ctx) error {
 		Preload("User.Role").
 		Find(&order)
 
-	rows, err := getOrderDetails(order.ID)
+	orderDetails, err := getOrderDetails(order.ID)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when quering database for order details",
 		})
-	}
-
-	var orderDetails []*models.OrderDetail
-	for rows.Next() {
-		var orderDetail models.OrderDetail
-		database.DB.ScanRows(rows, &orderDetail)
-		orderDetails = append(orderDetails, &orderDetail)
 	}
 
 	order.OrderDetails = orderDetails
