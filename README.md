@@ -61,3 +61,273 @@ There are also three endpoints for the admin:
 - `/admin/menu`
 - `/admin/users`
 - `/admin/orders`
+
+All requests have a data (object or array) and error (bool) property. The `err`
+field will be true if there are any errors, client-side or server-side. In that case,
+a field named `message` will tell you exactly what happened.
+
+```json
+{
+  "err": true,
+  "message": "..."
+}
+```
+
+For example, if you tried to access a protected endpoint (say `/api/orders`)
+without valid credentials, you would get the following response:
+
+```json
+{
+  "err": true,
+  "message": "cannot verify token"
+}
+```
+
+An exhaustive list of error messages will be documented soon.
+
+### Auth
+
+#### Sign up
+
+To sign up a user, issue a POST request to `/signup` with a JSON body with the
+following fields:
+
+- `name` (string),
+- `email`(string): has to be valid email
+- `password`(string): has to be >= 8 characters long
+
+```json
+{
+  "name": "Muhammad Rava",
+  "email": "rava@gmail.com",
+  "password": "secret-password"
+}
+```
+
+A successful response looks like this:
+
+```json
+{
+  "err": false,
+  "message": "signup success! redirect user to login page"
+}
+```
+
+You will get the following error if email is not valid or password is less then 8
+characters long:
+
+```json
+{
+  "err": true,
+  "message": "email has to be valid, and password has to be at least 8 characters long"
+}
+```
+
+#### Log in
+
+To log a user in, issue a POST request to `/signin` with a JSON body with fields `email` and
+`password`:
+
+```json
+{
+  "email": "rava@gmail.com",
+  "password": "secret-password"
+}
+```
+
+A successful response looks like:
+
+```json
+{
+  "err": false,
+  "message": "successfully logged in"
+}
+```
+
+The API will issue a cookie for the client to log in.
+
+#### Log out
+
+To log a user out, issue a POST request to `/logout` with no body. A successful
+request yields a response like this:
+
+```json
+{
+  "err": false,
+  "message": "successfully logged out"
+}
+```
+
+### Menu
+
+To get all menus you can issue a GET request to `/api/menu`. You can also search
+by name or filter by type by adding an URL parameter like so: `/api/menu?name=searchterm&type_id=10`.
+
+You will get a response following this structure:
+
+```json
+{
+  "data": [
+    {
+      "id": "b983ff25-c532-43ea-aee7-fc75eaa7c2bb",
+      "name": "Espresso",
+      "type_id": 1,
+      "type": {
+        "id": 1,
+        "type": "kopi"
+      },
+      "created_at": "2024-01-19T08:56:35.169389+07:00",
+      "updated_at": "2024-01-19T08:56:35.169389+07:00",
+      "variant_values": [
+        {
+          "menu_id": "b983ff25-c532-43ea-aee7-fc75eaa7c2bb",
+          "option_id": 1,
+          "option_value_id": 2,
+          "option": {
+            "id": 1,
+            "name": "temp"
+          },
+          "option_value": {
+            "id": 2,
+            "option_id": 1,
+            "value": "hot"
+          },
+          "price": 6000
+        },
+        {
+          "menu_id": "b983ff25-c532-43ea-aee7-fc75eaa7c2bb",
+          "option_id": 1,
+          "option_value_id": 1,
+          "option": {
+            "id": 1,
+            "name": "temp"
+          },
+          "option_value": {
+            "id": 1,
+            "option_id": 1,
+            "value": "iced"
+          },
+          "price": 10000
+        }
+      ]
+    }
+  ],
+  "error": false
+}
+```
+
+### Orders
+
+#### Get orders
+
+To get orders you can issue a GET request to `/api/orders`; this gets all
+incomplete orders by default. You can filter by status by adding a query parameter
+to the URL, for example to get incomplete orders:
+
+`/api/orders?is_completed=false`
+
+If successful, you will get a response following this structure:
+
+```json
+{
+  "data": [
+    {
+      "id": "686156e2-993b-4518-ab42-e757335fcd75",
+      "user_id": "fad6c002-cbba-48dc-81d8-d56a17f5428c",
+      "user": {
+        "id": "fad6c002-cbba-48dc-81d8-d56a17f5428c",
+        "name": "Abiman You",
+        "email": "abim@abim.com",
+        "password": "$2a$14$DhwQKFBX8ZVoIJqBokT6guiKeJ063uBpekz.ZM1ISncnhe.xm1/Qe",
+        "role_id": 1,
+        "role": {
+          "id": 1,
+          "name": "user"
+        },
+        "created_at": "2024-02-19T10:01:05.918176+07:00",
+        "updated_at": "2024-02-19T10:01:05.918176+07:00"
+      },
+      "created_at": "2024-02-20T15:35:39.374745+07:00",
+      "is_completed": false,
+      "completed_at": "0001-01-01T00:00:00Z",
+      "order_details": [
+        {
+          "order_id": "686156e2-993b-4518-ab42-e757335fcd75",
+          "menu_id": "ab2a528c-9c5b-45d0-ba7f-ce91a97c6b67",
+          "menu_name": "Banana Strawberry",
+          "menu_type": "pizza",
+          "menu_option_id": 35,
+          "menu_option": "pizza topping",
+          "menu_option_value_id": 36,
+          "menu_option_value": "regular",
+          "quantity": 2,
+          "total_price": 90000
+        }
+      ]
+    }
+  ],
+  "err": false
+}
+```
+
+#### Place a new order
+
+This endpoint is protected by auth. Makes sure you have logged in before making
+a request. To place a new order, issue a POST request with the following body:
+
+```json
+{
+  "order_details": [
+    {
+      "menu_id": "valid menu ID here",
+      "menu_option_id": 999,
+      "menu_option_value_id": 999,
+      "quantity": 1
+    }
+  ]
+}
+```
+
+(UNSTABLE: anonymous ordering) If placing a new order for an anonymous user, you can supply a username:
+
+```json
+{
+  "username": "Rava Basya",
+  "order_details": [
+    {
+      "menu_id": "valid menu ID here",
+      "menu_option_id": 999,
+      "menu_option_value_id": 999,
+      "quantity": 1
+    }
+  ]
+}
+```
+
+The `order_details` field is an array containing however many items you want to
+order. The item is an object with the following fields:
+
+- `menu_id` (uuid): ID of menu item
+- `menu_option_id` (int): ID of menu option
+- `menu_option_value_id` (int): Id of menu option value
+
+You need to specify `menu_option_id` and `menu_option_value_id` according to the
+menu type. For example, the pizza menu type has `35` for `option_id` (pizza topping)
+and `36` (regular) for one of the `option_value_id`, therefore your order should
+look like this:
+
+```json
+
+  "order_details": [
+    {
+      "menu_id": "bf5aad5a-4d81-4ab2-ae64-d0dad9b77061",
+      "menu_option_id": 35,
+      "menu_option_value_id": 36,
+      "quantity": 1
+    }
+  ]
+}
+```
+
+You can look at the available options and the corresponding option values when
+getting menu information.
