@@ -3,11 +3,13 @@ package handlers
 import (
 	"abs-app/database"
 	"abs-app/models"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 )
 
@@ -48,6 +50,16 @@ func CreateNewMenuItem(c *fiber.Ctx) error {
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		tx.Rollback()
+
+		if pgError := result.Error.(*pgconn.PgError); errors.Is(result.Error, pgError) {
+			if pgError.Code == "23503" {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"err":     true,
+					"message": "make sure all values supplied are valid",
+				})
+			}
+		}
+
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when inserting new menu data to database",
@@ -126,7 +138,7 @@ func GetMenuItemByID(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
-			"message": "error when parsing drink id",
+			"message": "error when parsing menu item ID",
 		})
 	}
 
@@ -293,18 +305,11 @@ func DeleteMenuItems(c *fiber.Ctx) error {
 	tx := database.DB.Begin()
 	result := tx.Delete(&models.Menu{}, menuIDs)
 
-	if result.Error != nil {
+	if result.Error != nil || result.RowsAffected == 0 {
 		tx.Rollback()
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "something went wrong when deleting menu items from database",
-		})
-	}
-	if result.RowsAffected == 0 {
-		tx.Rollback()
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"err":     true,
-			"message": "delete doesn't work",
 		})
 	}
 
