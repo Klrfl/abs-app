@@ -167,7 +167,10 @@ func GetMenuItemByID(c *fiber.Ctx) error {
 
 	menuItem.VariantValues = variantValues
 
-	return c.JSON(&menuItem)
+	return c.JSON(fiber.Map{
+		"err":  false,
+		"data": &menuItem,
+	})
 }
 
 func UpdateMenuItem(c *fiber.Ctx) error {
