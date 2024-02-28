@@ -37,12 +37,14 @@ In order of priority.
   - ~~implement order completion~~
   - omit password field in orders
 - ~~implement limiting~~
-- make `.sql` file for database migrations
-  - insert menu data
-- make API documentation, preferrably a dedicated site
-- make a frontend application, probably with Vue again or Svelte (as a monorepo)
+- implement better error handling for various edge cases
+  - ~~signup~~
+  - login
+- ~~make `.sql` file for database migrations~~
+- make API documentation (in progress)
 - migrate this API to use Docker (lmao I will probably not do this)
 - final configurations and deploy!!
+- make a frontend application probably
 
 ## How to use
 
