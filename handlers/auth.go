@@ -3,10 +3,14 @@ package handlers
 import (
 	"abs-app/database"
 	"abs-app/models"
+	"errors"
+	"fmt"
+	"net/mail"
 	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
@@ -19,6 +23,14 @@ func Signup(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
 			"message": "something wrong with the payload",
+		})
+
+	}
+
+	if _, err := mail.ParseAddress(newUser.Email); err != nil || len(newUser.Password) < 8 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "email has to be valid, and password has to be at least 8 characters long",
 		})
 	}
 
@@ -36,9 +48,19 @@ func Signup(c *fiber.Ctx) error {
 	tx := database.DB.Begin()
 	result := tx.Create(&newUser)
 
-	if result.Error != nil {
+	if result.Error != nil || result.RowsAffected == 0 {
 		tx.Rollback()
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+
+		if pgError := result.Error.(*pgconn.PgError); errors.Is(result.Error, pgError) {
+			if pgError.Code == "23505" {
+				return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+					"err":     true,
+					"message": fmt.Sprintf("user with email %s already exists", newUser.Email),
+				})
+			}
+		}
+
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when signing up user",
 		})
@@ -47,7 +69,7 @@ func Signup(c *fiber.Ctx) error {
 	tx.Commit()
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"err":     false,
-		"message": "signup success! redirect user to login page",
+		"message": fmt.Sprintf("signup for user %s success! redirect user to login page", newUser.Email),
 	})
 }
 
