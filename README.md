@@ -439,8 +439,8 @@ update name and the price of menu item where `option_id` is 1 and `option_value_
 
 #### Delete a menu item
 
-To delete a menu item, issue a DELETE request to `/admin/menu/menu-id` where `menu-id`
-is a valid UUID of the menu item you want to delete. A successful response looks
+To delete a menu item, issue a DELETE request to `/admin/menu/:id` where `id`
+is a valid menu item ID of type UUID you want to delete. A successful response looks
 like this:
 
 ```json
@@ -455,4 +455,20 @@ so:
 
 ```json
 ["menu-id-1", "menu-id-2"]
+```
+
+#### Edit a price of a menu item
+
+To edit a specific price of a menu item, issue a POST `/admin/menu/:id/variant_values`
+where `id` is a valid menu item ID of type UUID. Attach a body specifying which
+combination of option_id and option_value_id you want to edit, and the new price:
+
+```json
+[
+  {
+    "option_id": 1,
+    "option_value_id": 1,
+    "price": 15000
+  }
+]
 ```
