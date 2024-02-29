@@ -416,7 +416,7 @@ body:
 }
 ```
 
-### Update an existing menu item
+#### Update an existing menu item
 
 TO update an existing menu item, issue a POST request to `/admin/menu` with the following
 body:
@@ -437,7 +437,7 @@ body:
 The server will only update non nil values. In the example above, the server will
 update name and the price of menu item where `option_id` is 1 and `option_value_id`is 2.
 
-### Delete a menu item
+#### Delete a menu item
 
 To delete a menu item, issue a DELETE request to `/admin/menu/menu-id` where `menu-id`
 is a valid UUID of the menu item you want to delete. A successful response looks
