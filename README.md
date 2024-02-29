@@ -5,6 +5,29 @@ ordering and managing at ABS.
 
 This project uses the GNU GPL v2.0 license.
 
+## Table of contents
+
+- [Development](#development)
+  - [Database](#database)
+  - [Todo](#database)
+- [How to use](#how-to-use)
+  - [Auth](#auth)
+    - [sign up](#sign-up)
+    - [log in](#log-in)
+    - [log out](#log-out)
+  - [Menu](#menu)
+  - [Orders](#orders)
+- [Admin](#admin)
+  - [Menu administration](#menu-administration)
+    - [Create new menu item](#create-new-menu-item)
+    - [Update existing menu item](#update-an-existing-menu-item)
+    - [Delete a menu item](#delete-a-menu-item)
+    - [Insert new price for a menu item](#insert-new-price-for-a-menu-item)
+    - [Update existing price for a menu item](#update-existing-price-of-a-menu-item)
+    - [Delete prices of a menu item](#delete-prices-of-a-menu-item)
+  - [Orders administration](#orders-administration)
+  - [Users administration](#users-administration)
+
 ## Development
 
 I developed this app on Ubuntu 22.04 in WSL2, so all the commands you will see
@@ -163,7 +186,12 @@ request yields a response like this:
 To get all menus you can issue a GET request to `/api/menu`. You can also search
 by name or filter by type by adding an URL parameter like so: `/api/menu?name=searchterm&type_id=10`.
 
-You will get a response following this structure:
+A successful response looks like this:
+
+<details>
+    <summary>
+        JSON response
+    </summary>
 
 ```json
 {
@@ -216,8 +244,15 @@ You will get a response following this structure:
 }
 ```
 
+</details>
+
 You can also get a menu item by ID by issuing a GET request to `/api/menu/valid-menu-id`
 Where `valid-menu-id` is a valid menu UUID. A successful response looks like this:
+
+<details>
+    <summary>
+        JSON response
+    </summary>
 
 ```json
 {
@@ -268,6 +303,8 @@ Where `valid-menu-id` is a valid menu UUID. A successful response looks like thi
 }
 ```
 
+</details>
+
 ### Orders
 
 #### Get orders
@@ -279,6 +316,11 @@ to the URL, for example to get incomplete orders:
 `/api/orders?is_completed=false`
 
 If successful, you will get a response following this structure:
+
+<details>
+    <summary>
+        JSON response
+    </summary>
 
 ```json
 {
@@ -321,6 +363,8 @@ If successful, you will get a response following this structure:
   "err": false
 }
 ```
+
+</details>
 
 #### Place a new order
 
@@ -390,7 +434,7 @@ All admin endpoints are located in `/admin`. Here you can administer orders, use
 and menu items as admin, but to do those things you need to be authenticated.
 Head over to `/signin` and sign the admin in.
 
-### Menu
+### Menu administration
 
 #### Create new menu item
 
@@ -457,9 +501,14 @@ so:
 ["menu-id-1", "menu-id-2"]
 ```
 
-#### Edit a price of a menu item
+#### Insert new price for a menu item
 
-To edit a specific price of a menu item, issue a POST `/admin/menu/:id/variant_values`
+To insert a new menu price of a menu item, issue a POST request to `/admin/menu/:id/variant_values`
+where `id` is the menu item ID of type UUID.
+
+#### Update existing price of a menu item
+
+To edit a specific price of a menu item, issue a PATCH `/admin/menu/:id/variant_values`
 where `id` is a valid menu item ID of type UUID. Attach a body specifying which
 combination of option_id and option_value_id you want to edit, and the new price:
 
@@ -472,3 +521,11 @@ combination of option_id and option_value_id you want to edit, and the new price
   }
 ]
 ```
+
+### Orders administration
+
+Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.
+
+### Users administration
+
+Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.
