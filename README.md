@@ -216,6 +216,58 @@ You will get a response following this structure:
 }
 ```
 
+You can also get a menu item by ID by issuing a GET request to `/api/menu/valid-menu-id`
+Where `valid-menu-id` is a valid menu UUID. A successful response looks like this:
+
+```json
+{
+  "data": {
+    "id": "b983ff25-c532-43ea-aee7-fc75eaa7c2bb",
+    "name": "Espresso",
+    "type_id": 1,
+    "type": {
+      "id": 1,
+      "type": "kopi"
+    },
+    "created_at": "2024-01-19T08:56:35.169389+07:00",
+    "updated_at": "2024-01-19T08:56:35.169389+07:00",
+    "variant_values": [
+      {
+        "menu_id": "b983ff25-c532-43ea-aee7-fc75eaa7c2bb",
+        "option_id": 1,
+        "option_value_id": 2,
+        "option": {
+          "id": 1,
+          "name": "temp"
+        },
+        "option_value": {
+          "id": 2,
+          "option_id": 1,
+          "value": "hot"
+        },
+        "price": 6000
+      },
+      {
+        "menu_id": "b983ff25-c532-43ea-aee7-fc75eaa7c2bb",
+        "option_id": 1,
+        "option_value_id": 1,
+        "option": {
+          "id": 1,
+          "name": "temp"
+        },
+        "option_value": {
+          "id": 1,
+          "option_id": 1,
+          "value": "iced"
+        },
+        "price": 10000
+      }
+    ]
+  },
+  "err": false
+}
+```
+
 ### Orders
 
 #### Get orders
@@ -317,7 +369,7 @@ and `36` (regular) for one of the `option_value_id`, therefore your order should
 look like this:
 
 ```json
-
+{
   "order_details": [
     {
       "menu_id": "bf5aad5a-4d81-4ab2-ae64-d0dad9b77061",
@@ -331,3 +383,76 @@ look like this:
 
 You can look at the available options and the corresponding option values when
 getting menu information.
+
+## Admin
+
+All admin endpoints are located in `/admin`. Here you can administer orders, users
+and menu items as admin, but to do those things you need to be authenticated.
+Head over to `/signin` and sign the admin in.
+
+### Menu
+
+#### Create new menu item
+
+to create a new menu item, issue a POST request to `/admin/menu` with the following
+body:
+
+```json
+{
+  "name": "a new delicious drink",
+  "type_id": 6,
+  "variant_values": [
+    {
+      "option_id": 1,
+      "option_value_id": 37,
+      "price": 8000
+    },
+    {
+      "option_id": 1,
+      "option_value_id": 2,
+      "price": 10000
+    }
+  ]
+}
+```
+
+### Update an existing menu item
+
+TO update an existing menu item, issue a POST request to `/admin/menu` with the following
+body:
+
+```json
+{
+  "name": "Minuman ngetes doang",
+  "variant_values": [
+    {
+      "option_id": 1,
+      "option_value_id": 2,
+      "price": 10000
+    }
+  ]
+}
+```
+
+The server will only update non nil values. In the example above, the server will
+update name and the price of menu item where `option_id` is 1 and `option_value_id`is 2.
+
+### Delete a menu item
+
+To delete a menu item, issue a DELETE request to `/admin/menu/menu-id` where `menu-id`
+is a valid UUID of the menu item you want to delete. A successful response looks
+like this:
+
+```json
+{
+  "err": false,
+  "message": "menu item successfully deleted"
+}
+```
+
+You can also batch delete by supplying the UUIDs of menu items in an array like
+so:
+
+```json
+["menu-id-1", "menu-id-2"]
+```
