@@ -303,6 +303,19 @@ func DeleteMenuItems(c *fiber.Ctx) error {
 	}
 
 	tx := database.DB.Begin()
+
+	// delete corresponding variant_values first
+	// there must be a better way to do this
+	err := tx.Delete(&models.VariantValue{}, menuIDs).Error
+	if err != nil {
+		tx.Rollback()
+
+		return c.JSON(fiber.Map{
+			"err":     true,
+			"message": "error when deleting menu items from database",
+		})
+	}
+
 	result := tx.Delete(&models.Menu{}, menuIDs)
 
 	if result.Error != nil || result.RowsAffected == 0 {
