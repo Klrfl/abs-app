@@ -3,11 +3,13 @@ package handlers
 import (
 	"abs-app/database"
 	"abs-app/models"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 func InsertNewPrices(c *fiber.Ctx) error {
@@ -56,10 +58,35 @@ func InsertNewPrices(c *fiber.Ctx) error {
 	tx := database.DB.Begin()
 	result = tx.Create(&newVariantValues)
 
-	menuItem.UpdatedAt = time.Now()
-	result2 := tx.Updates(&menuItem)
+	if result.Error != nil {
+		tx.Rollback()
 
-	if result.Error != nil || result2.Error != nil {
+		if pgError := result.Error.(*pgconn.PgError); errors.Is(result.Error, pgError) {
+			if pgError.Code == "23505" {
+				return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+					"err":     true,
+					"message": "one of the items contains a combination of option_id and option_value_id that already exists",
+				})
+			}
+
+			if pgError.Code == "23503" {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"err":     true,
+					"message": "make sure both option_id and option_value_id are valid",
+				})
+			}
+		}
+
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when inserting new prices",
+		})
+	}
+
+	menuItem.UpdatedAt = time.Now()
+	result = tx.Updates(&menuItem)
+
+	if result.Error != nil {
 		tx.Rollback()
 		return c.JSON(fiber.Map{
 			"err":     true,

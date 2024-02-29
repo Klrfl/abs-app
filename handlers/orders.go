@@ -398,17 +398,10 @@ func CompleteOrder(c *fiber.Ctx) error {
 	order.CompletedAt = time.Now()
 	result := database.DB.Updates(&order)
 
-	if result.Error != nil {
+	if result.Error != nil || result.RowsAffected == 0 {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when querying database",
-		})
-	}
-
-	if result.RowsAffected == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"err":     true,
-			"message": "failed to complete order",
 		})
 	}
 
