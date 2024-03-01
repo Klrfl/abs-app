@@ -55,7 +55,7 @@ This project uses PostgreSQL. Install it locally on your machine, database migra
 will run automatically when you run the command `go run .`. For now, the seeder only
 has the user roles and one admin user.
 
-Complete sample data is coming soon
+The database dump is now available (`abs.sql`).
 
 ### Todo
 
@@ -74,6 +74,7 @@ In order of priority.
   - login
 - ~~make `.sql` file for database migrations~~
 - make API documentation (in progress)
+- add unit testing
 - migrate this API to use Docker (lmao I will probably not do this)
 - final configurations and deploy!!
 - make a frontend application probably
@@ -115,7 +116,7 @@ without valid credentials, you would get the following response:
 }
 ```
 
-An exhaustive list of error messages will be documented soon.
+I will make an exhaustive list of error messages soon.
 
 ### Auth
 
@@ -124,7 +125,7 @@ An exhaustive list of error messages will be documented soon.
 To sign up a user, issue a POST request to `/signup` with a JSON body with the
 following fields:
 
-- `name` (string),
+- `name` (string)
 - `email`(string): has to be valid email
 - `password`(string): has to be >= 8 characters long
 
@@ -157,8 +158,11 @@ characters long:
 
 #### Log in
 
-To log a user in, issue a POST request to `/signin` with a JSON body with fields `email` and
-`password`:
+To log a user in, issue a POST request to `/signin` with a JSON body with these
+fields:
+
+- `email` (string)
+- `password`(string)
 
 ```json
 {
@@ -194,8 +198,9 @@ request yields a response like this:
 
 #### Get all menu items
 
-To get all menu items, you can issue a GET request to `/api/menu`. You can also search
-by name or filter by type by adding an URL parameter like so: `/api/menu?name=searchterm&type_id=10`.
+To get all menu items, you can issue a GET request to `/api/menu`. You can also
+search by name or filter by type by adding an URL parameter like so:
+`/api/menu?name=searchterm&type_id=10`.
 
 A successful response looks like this:
 
@@ -333,7 +338,7 @@ If successful, you will get a response following this structure:
 
 <details>
     <summary>
-        JSON response
+        Successful response example
     </summary>
 
 ```json
@@ -403,7 +408,8 @@ a request. To place a new order, issue a POST request with the following body:
 }
 ```
 
-(UNSTABLE: anonymous ordering) If placing a new order for an anonymous user, you can supply a username:
+(UNSTABLE: anonymous ordering) If placing a new order for an anonymous user, you
+can supply a username:
 
 ```json
 {
@@ -523,7 +529,38 @@ the UUIDs of menu items in an array like so:
 #### Insert new price for a menu item
 
 To insert a new menu price of a menu item, issue a POST request to `/admin/menu/:id/variant_values`
-where `id` is the menu item ID of type UUID.
+where `id` is the menu item ID of type UUID. You can attach a body to the request
+like so:
+
+```json
+[
+  {
+    "option_id": 999,
+    "option_value_id": 999,
+    "price": 16000
+  }
+]
+```
+
+You can include all the prices needed in the array.
+
+If the option_id and/or option_value_id does not exist, you will get the following
+response:
+
+<details>
+
+<summary>
+    Error response
+</summary>
+
+```json
+{
+  "err": true,
+  "message": "make sure both option_id and option_value_id are valid"
+}
+```
+
+</details>
 
 #### Update existing price of a menu item
 
@@ -541,6 +578,8 @@ combination of option_id and option_value_id you want to edit, and the new price
 ]
 ```
 
+You can put as many combination as needed in the array.
+
 #### Delete prices of a menu item
 
 To delete a price of a menu item, issue a DELETE request to `/admin/menu/:id/variant_values`
@@ -548,7 +587,8 @@ where `id` is a valid menu item ID of type UUID with the following body:
 
 ```json
 {
-  "": "blom bentar ya"
+  "option_id": 1,
+  "option_value_id": 37
 }
 ```
 
@@ -621,7 +661,7 @@ also get orders by ID (`/admin/orders/:id`) where id is a valid order ID.
 #### Complete an order
 
 To complete an order, issue a PATCH request (`/admin/orders/:id`) where `id` is
-a valid order ID.
+a valid order ID. Note that you don't have to attach a body to the request.
 
 <details>
     <summary>Successful response example</summary>
