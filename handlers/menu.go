@@ -19,7 +19,7 @@ func CreateNewMenuItem(c *fiber.Ctx) error {
 	if err := c.BodyParser(&incomingMenuItem); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
-			"message": "something wrong with the new menu item's data",
+			"message": "error when parsing request payload: make sure all fields are correct",
 		})
 	}
 
@@ -34,6 +34,16 @@ func CreateNewMenuItem(c *fiber.Ctx) error {
 
 	if error != nil {
 		tx.Rollback()
+
+		if pgError := error.(*pgconn.PgError); errors.Is(error, pgError) {
+			if pgError.Code == "23503" {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"err":     true,
+					"message": "make sure type_id is correct",
+				})
+			}
+		}
+
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "error when inserting new menu data to database",
