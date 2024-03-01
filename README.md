@@ -16,7 +16,12 @@ This project uses the GNU GPL v2.0 license.
     - [log in](#log-in)
     - [log out](#log-out)
   - [Menu](#menu)
+    - [get all menu items](#get-all-menu-items)
+    - [get menu item by ID](#get-menu-item-by-id)
   - [Orders](#orders)
+    - [Get orders](#get-orders)
+    - [Get order by ID](#get-order-by-id)
+    - [Place a new order](#place-a-new-order)
 - [Admin](#admin)
   - [Menu administration](#menu-administration)
     - [Create new menu item](#create-new-menu-item)
@@ -183,14 +188,16 @@ request yields a response like this:
 
 ### Menu
 
-To get all menus you can issue a GET request to `/api/menu`. You can also search
+#### Get all menu items
+
+To get all menu items, you can issue a GET request to `/api/menu`. You can also search
 by name or filter by type by adding an URL parameter like so: `/api/menu?name=searchterm&type_id=10`.
 
 A successful response looks like this:
 
 <details>
     <summary>
-        JSON response
+        successful response example
     </summary>
 
 ```json
@@ -246,12 +253,14 @@ A successful response looks like this:
 
 </details>
 
+#### Get menu item by ID
+
 You can also get a menu item by ID by issuing a GET request to `/api/menu/valid-menu-id`
 Where `valid-menu-id` is a valid menu UUID. A successful response looks like this:
 
 <details>
     <summary>
-        JSON response
+        Successful response example
     </summary>
 
 ```json
@@ -310,8 +319,9 @@ Where `valid-menu-id` is a valid menu UUID. A successful response looks like thi
 #### Get orders
 
 To get orders you can issue a GET request to `/api/orders`; this gets all
-incomplete orders by default. You can filter by status by adding a query parameter
-to the URL, for example to get incomplete orders:
+**complete** orders for the current users by default. You can filter by status
+by adding the query parameter `is_completed` to the URL, for example to get incomplete
+orders:
 
 `/api/orders?is_completed=false`
 
@@ -365,6 +375,11 @@ If successful, you will get a response following this structure:
 ```
 
 </details>
+
+#### Get order By ID
+
+You can also get individual orders by issuing a GET request to `/api/orders/:id`
+where `id` is a valid order ID.
 
 #### Place a new order
 
@@ -494,8 +509,8 @@ like this:
 }
 ```
 
-You can also batch delete by supplying the UUIDs of menu items in an array like
-so:
+You can also batch delete (make a DELETE request to `/admin/menu/`) by supplying
+the UUIDs of menu items in an array like so:
 
 ```json
 ["menu-id-1", "menu-id-2"]
@@ -520,6 +535,17 @@ combination of option_id and option_value_id you want to edit, and the new price
     "price": 15000
   }
 ]
+```
+
+#### Delete prices of a menu item
+
+To delete a price of a menu item, issue a DELETE request to `/admin/menu/:id/variant_values`
+where `id` is a valid menu item ID of type UUID with the following body:
+
+```json
+{
+  "": "blom bentar ya"
+}
 ```
 
 ### Orders administration
