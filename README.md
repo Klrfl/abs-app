@@ -12,12 +12,12 @@ This project uses the GNU GPL v2.0 license.
   - [Todo](#database)
 - [How to use](#how-to-use)
   - [Auth](#auth)
-    - [sign up](#sign-up)
-    - [log in](#log-in)
-    - [log out](#log-out)
+    - [Sign up](#sign-up)
+    - [Log in](#log-in)
+    - [Log out](#log-out)
   - [Menu](#menu)
-    - [get all menu items](#get-all-menu-items)
-    - [get menu item by ID](#get-menu-item-by-id)
+    - [Get all menu items](#get-all-menu-items)
+    - [Get menu item by ID](#get-menu-item-by-id)
   - [Orders](#orders)
     - [Get orders](#get-orders)
     - [Get order by ID](#get-order-by-id)
@@ -31,7 +31,11 @@ This project uses the GNU GPL v2.0 license.
     - [Update existing price for a menu item](#update-existing-price-of-a-menu-item)
     - [Delete prices of a menu item](#delete-prices-of-a-menu-item)
   - [Orders administration](#orders-administration)
+    - [Get all orders](#get-all-orders)
+    - [Complete an order](#complete-an-order)
   - [Users administration](#users-administration)
+    - [Get all users](#get-all-users)
+    - [Get user by ID](#get-user)
 
 ## Development
 
@@ -550,8 +554,147 @@ where `id` is a valid menu item ID of type UUID with the following body:
 
 ### Orders administration
 
-Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.
+#### Get all orders
+
+To get all orders of all users, issue a GET request to `/admin/orders/`. You can
+also get orders by ID (`/admin/orders/:id`) where id is a valid order ID.
+
+<details>
+    <summary>Successful response example</summary>
+
+```json
+{
+  "data": [
+    {
+      "id": "26a33223-da03-4a5c-8bbb-f7fd6944abef",
+      "user_id": "46e11084-0baa-4d2f-bf52-6f6a93a78619",
+      "user": {
+        "id": "46e11084-0baa-4d2f-bf52-6f6a93a78619",
+        "name": "Muhammad Rava",
+        "email": "rava@gmail.com",
+        "password": "password",
+        "role_id": 1,
+        "role": {
+          "id": 1,
+          "name": "user"
+        },
+        "created_at": "2024-02-21T10:12:43.369861+07:00",
+        "updated_at": "2024-02-21T10:12:43.369861+07:00"
+      },
+      "created_at": "2024-02-21T10:18:19.674673+07:00",
+      "is_completed": true,
+      "completed_at": "2024-02-21T10:26:54.973271+07:00",
+      "order_details": [
+        {
+          "order_id": "26a33223-da03-4a5c-8bbb-f7fd6944abef",
+          "menu_id": "ab2a528c-9c5b-45d0-ba7f-ce91a97c6b67",
+          "menu_name": "Banana Strawberry",
+          "menu_type": "pizza",
+          "menu_option_id": 35,
+          "menu_option": "pizza topping",
+          "menu_option_value_id": 36,
+          "menu_option_value": "regular",
+          "quantity": 2,
+          "total_price": 90000
+        }
+      ]
+    }
+  ],
+  "err": false
+}
+```
+
+</details>
+
+<details>
+    <summary>error response</summary>
+
+```json
+{
+  "err": true,
+  "message": "error when querying database"
+}
+```
+
+</details>
+
+#### Complete an order
+
+To complete an order, issue a PATCH request (`/admin/orders/:id`) where `id` is
+a valid order ID.
+
+<details>
+    <summary>Successful response example</summary>
+
+```json
+{
+  "err": false,
+  "message": "order of ID <id> succesfully completed"
+}
+```
+
+</details>
 
 ### Users administration
 
-Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.
+#### Get all users
+
+To get all users, issue a GET request to `/admin/users`.
+
+<details>
+    <summary>
+        Succcesful response example
+    </summary>
+
+```json
+{
+  "data": [
+    {
+      "id": "fad6c002-cbba-48dc-81d8-d56a17f5428c",
+      "name": "Abiman You",
+      "email": "abim@abim.com",
+      "password": "",
+      "role_id": 1,
+      "role": {
+        "id": 1,
+        "name": "user"
+      },
+      "created_at": "2024-02-19T10:01:05.918176+07:00",
+      "updated_at": "2024-02-19T10:01:05.918176+07:00"
+    }
+  ],
+  "err": false
+}
+```
+
+</details>
+
+#### Get user by ID
+
+You can also get a specific user by adding an id (`/admin/users/:id`).
+
+<details>
+    <summary>
+        Successful response example
+    </summary>
+
+```json
+{
+  "data": {
+    "id": "fad6c002-cbba-48dc-81d8-d56a17f5428c",
+    "name": "Abiman You",
+    "email": "abim@abim.com",
+    "password": "",
+    "role_id": 1,
+    "role": {
+      "id": 1,
+      "name": "user"
+    },
+    "created_at": "2024-02-19T10:01:05.918176+07:00",
+    "updated_at": "2024-02-19T10:01:05.918176+07:00"
+  },
+  "err": false
+}
+```
+
+</details>
