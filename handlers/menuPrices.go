@@ -201,7 +201,7 @@ func UpdatePrices(c *fiber.Ctx) error {
 }
 
 func DeletePrice(c *fiber.Ctx) error {
-	id, err := uuid.Parse(c.Params("id"))
+	menuID, err := uuid.Parse(c.Params("id"))
 
 	if err != nil {
 		return c.JSON(fiber.Map{
@@ -210,11 +210,20 @@ func DeletePrice(c *fiber.Ctx) error {
 		})
 	}
 
+	menuPrices := new(models.VariantValue)
+
+	if err := c.BodyParser(&menuPrices); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when parsing request payload",
+		})
+	}
+
 	menuItem := new(models.Menu)
 
 	result := database.DB.
 		Limit(1).
-		Where("id = ?", id).
+		Where("id = ?", menuID).
 		Find(&menuItem)
 
 	if result.Error != nil {
@@ -227,17 +236,14 @@ func DeletePrice(c *fiber.Ctx) error {
 	if result.RowsAffected == 0 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"err":     false,
-			"message": fmt.Sprintf("menu item with id %s doesn't exist", id),
+			"message": fmt.Sprintf("menu item with ID %s doesn't exist", menuID),
 		})
 	}
 
-	OptionID := c.QueryInt("option_id")
-	OptionValueID := c.QueryInt("option_value_id")
-
 	tx := database.DB.Begin()
 	result = tx.
-		Where("option_id = ? AND option_value_id = ?", OptionID, OptionValueID).
-		Delete(&models.VariantValue{}, id)
+		Where("option_id = ? AND option_value_id = ?", menuPrices.OptionID, menuPrices.OptionValueID).
+		Delete(&models.VariantValue{}, menuID)
 
 	menuItem.UpdatedAt = time.Now()
 	result2 := database.DB.Updates(&menuItem)
@@ -252,15 +258,15 @@ func DeletePrice(c *fiber.Ctx) error {
 
 	if result.RowsAffected == 0 {
 		tx.Rollback()
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+		return c.JSON(fiber.Map{
 			"err":     true,
-			"message": fmt.Sprintf("failed to delete menu item with id %s", id),
+			"message": "combination of option_id and option_value_id already deleted",
 		})
 	}
 
 	tx.Commit()
 	return c.JSON(fiber.Map{
 		"err":     false,
-		"message": fmt.Sprintf("prices of menu item with id %s successfully deleted", id),
+		"message": fmt.Sprintf("prices of menu item with id %s successfully deleted", menuID),
 	})
 }
