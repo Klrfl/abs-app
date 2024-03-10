@@ -83,21 +83,44 @@ func CreateNewMenuItem(c *fiber.Ctx) error {
 	})
 }
 
-func GetMenu(c *fiber.Ctx) error {
-	queries := c.Queries()
+func paginate(c *fiber.Ctx) func(db *gorm.DB) *gorm.DB {
+	page := c.QueryInt("page", 0)
+	limit := c.QueryInt("limit", 0)
 
+	if page <= 0 {
+		page = 1
+	}
+
+	if limit <= 0 {
+		limit = 20
+	} else if limit > 100 {
+		limit = 100
+	}
+
+	return func(db *gorm.DB) *gorm.DB {
+		offset := (page - 1) * limit
+		return db.Offset(offset).Limit(limit)
+	}
+}
+
+func GetMenu(c *fiber.Ctx) error {
 	var menu []*models.Menu
 	var result *gorm.DB
 
-	if queries["name"] != "" {
+	queryMenuName := c.Query("name")
+	queryMenuTypeID := c.QueryInt("type_id")
+
+	if queryMenuName != "" {
 		result = database.DB.
 			Preload("Type").
-			Where("menu.name ILIKE ?", fmt.Sprintf("%%%s%%", queries["name"])).
+			Scopes(paginate(c)).
+			Where("menu.name ILIKE ?", fmt.Sprintf("%%%s%%", queryMenuName)).
 			Find(&menu)
 	} else {
 		result = database.DB.
 			Preload("Type").
-			Where(&models.Menu{TypeID: c.QueryInt("type_id")}).
+			Scopes(paginate(c)).
+			Where(&models.Menu{TypeID: queryMenuTypeID}).
 			Find(&menu)
 	}
 
@@ -137,8 +160,9 @@ func GetMenu(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{
-		"err":  false,
-		"data": menu,
+		"err":   false,
+		"data":  menu,
+		"count": len(menu),
 	})
 }
 

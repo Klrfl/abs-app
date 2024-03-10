@@ -74,6 +74,7 @@ In order of priority.
   - login
 - ~~make `.sql` file for database migrations~~
 - make API documentation (in progress)
+- ~~implement pagination and limiting~~
 - add unit testing
 - migrate this API to use Docker (lmao I will probably not do this)
 - final configurations and deploy!!
@@ -261,6 +262,19 @@ A successful response looks like this:
 ```
 
 </details>
+
+You can also limit and paginate the response by adding limit and page query to
+your request.
+
+Page defaults to 1 if not specified. If supplied page is or less than 0, it will
+default to 1.
+
+The maximum limit is 100, if supplied limit is 0 or more than 100, it defaults
+to 100. For example:
+
+`localhost:8080/api/menu?limit=100` -> gets 1st page with 100 items in the page
+`localhost:8080/api/menu?page=10` -> gets 10th page with 20 items in the page
+`localhost:8080/api/menu?page=4?limit=10` -> gets 4th page with 10 items in the page
 
 #### Get menu item by ID
 
