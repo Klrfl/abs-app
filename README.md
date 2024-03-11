@@ -46,6 +46,9 @@ Clone this repo and then `cd` into it. To develop this app locally first you mus
 have go installed on your machine. If you already have Go, install all dependencies
 with the command `go get .`.
 
+Then copy the `.env.example` API and name the new file to `.env`, and fill all
+the fields with the appropriate data.
+
 After all setup is done, you can go ahead and run `go run .`, and Fiber will tell
 you that the server is running on `localhost:8080`.
 
