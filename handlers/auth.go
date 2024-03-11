@@ -138,6 +138,7 @@ func Login(c *fiber.Ctx) error {
 
 	c.Cookie(&fiber.Cookie{
 		Name:     "token",
+		SameSite: "none",
 		Value:    signedToken,
 		Path:     "/",
 		Expires:  expiryTime,
@@ -148,6 +149,7 @@ func Login(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"err":     false,
+		"token":   signedToken,
 		"message": "successfully logged in",
 	})
 }

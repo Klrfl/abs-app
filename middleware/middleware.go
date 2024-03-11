@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -27,7 +28,13 @@ func decodeToken(tokenString string, key string) (*jwt.Token, error) {
 
 func ValidateUserJWT(c *fiber.Ctx) error {
 	//TODO: verify tokenString and refresh if less then 20 minutes
-	tokenString := c.Cookies("token")
+	var tokenString string
+	if c.Cookies("token") != "" {
+		tokenString = c.Cookies("token")
+	} else {
+		tokenString = strings.Split(c.Get("Authorization"), " ")[1]
+	}
+
 	key := os.Getenv("SECRET")
 
 	decodedToken, err := decodeToken(tokenString, key)
