@@ -46,7 +46,7 @@ Clone this repo and then `cd` into it. To develop this app locally first you mus
 have go installed on your machine. If you already have Go, install all dependencies
 with the command `go get .`.
 
-Then copy the `.env.example` API and name the new file to `.env`, and fill all
+Then copy the `.env.example` file and name the new file to `.env`, and fill all
 the fields with the appropriate data.
 
 After all setup is done, you can go ahead and run `go run .`, and Fiber will tell
@@ -76,10 +76,10 @@ In order of priority.
   - ~~signup~~
   - login
 - ~~make `.sql` file for database migrations~~
-- make API documentation (in progress)
+- make documentation (in progress)
 - ~~implement pagination and limiting~~
 - add unit testing
-- migrate this API to use Docker (lmao I will probably not do this)
+- migrate code to use Docker (lmao I will probably not do this)
 - final configurations and deploy!!
 - make a frontend application probably
 
@@ -180,11 +180,16 @@ A successful response looks like:
 ```json
 {
   "err": false,
+  "token": "jwttoken",
   "message": "successfully logged in"
 }
 ```
 
-The API will issue a cookie for the client to log in.
+The server will issue a token in the response for the client to log in, and also
+set a cookie with the token which can be used for web apps.
+
+Every request to a protected endpoint has to have the token issued by the server
+either in a cookie or in an `Authorization` token.
 
 #### Log out
 
