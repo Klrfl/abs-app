@@ -37,7 +37,7 @@ type InputVariantValue struct {
 }
 
 type MenuType struct {
-	ID   int    `json:"id" gorm:"primaryKey"`
+	ID   int    `json:"id" gorm:"unique;primaryKey;autoIncrement"`
 	Type string `json:"type"`
 }
 

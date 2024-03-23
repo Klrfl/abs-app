@@ -66,4 +66,11 @@ func SetupRoutes(app *fiber.App) {
 	adminMenuRoute.Patch("/:id/variant_values", handlers.UpdatePrices)
 	adminMenuRoute.Delete("/:id/variant_values", handlers.DeletePrice)
 	adminMenuRoute.Delete("/:id", handlers.DeleteMenuItem)
+
+	adminMenuTypesRoute := adminMenuRoute.Group("/types")
+	adminMenuTypesRoute.Get("/", handlers.GetMenuTypes)
+	adminMenuTypesRoute.Get("/:id", handlers.GetMenuTypeByID)
+	adminMenuRoute.Post("/types", handlers.AddNewMenuType)
+	adminMenuRoute.Delete("/types", handlers.DeleteMenuTypeByID)
+	// adminMenuRoute.Get("/types", handlers.GetMenuTypes)
 }
