@@ -26,14 +26,16 @@ func decodeToken(tokenString string, key string) (*jwt.Token, error) {
 	return decodedToken, nil
 }
 
+func getTokenString(c *fiber.Ctx) string {
+	if len(c.Get("Authorization")) != 0 {
+		return strings.Split(c.Get("Authorization"), " ")[1]
+	}
+	return c.Cookies("token")
+}
+
 func ValidateUserJWT(c *fiber.Ctx) error {
 	//TODO: verify tokenString and refresh if less then 20 minutes
-	var tokenString string
-	if c.Cookies("token") != "" {
-		tokenString = c.Cookies("token")
-	} else {
-		tokenString = strings.Split(c.Get("Authorization"), " ")[1]
-	}
+	tokenString := getTokenString(c)
 
 	key := os.Getenv("SECRET")
 
@@ -67,7 +69,7 @@ func ValidateUserJWT(c *fiber.Ctx) error {
 }
 
 func ValidateAdminJWT(c *fiber.Ctx) error {
-	tokenString := c.Cookies("token")
+	tokenString := getTokenString(c)
 	key := os.Getenv("SECRET")
 
 	decodedToken, err := decodeToken(tokenString, key)

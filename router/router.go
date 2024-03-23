@@ -43,7 +43,7 @@ func SetupRoutes(app *fiber.App) {
 	ordersRoute.Post("/", handlers.CreateNewOrder)
 
 	// admin routes
-	adminRoute := app.Group("/admin", middleware.ValidateAdminJWT)
+	adminRoute := app.Group("/api/admin", middleware.ValidateAdminJWT)
 
 	adminUsersRoute := adminRoute.Group("/users")
 	adminUsersRoute.Get("/", handlers.GetUsers)
