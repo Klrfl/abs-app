@@ -70,7 +70,7 @@ func SetupRoutes(app *fiber.App) {
 	adminMenuTypesRoute := adminMenuRoute.Group("/types")
 	adminMenuTypesRoute.Get("/", handlers.GetMenuTypes)
 	adminMenuTypesRoute.Get("/:id", handlers.GetMenuTypeByID)
-	adminMenuRoute.Post("/types", handlers.AddNewMenuType)
-	adminMenuRoute.Delete("/types", handlers.DeleteMenuTypeByID)
-	// adminMenuRoute.Get("/types", handlers.GetMenuTypes)
+	adminMenuTypesRoute.Post("/", handlers.AddNewMenuType)
+	adminMenuTypesRoute.Patch("/:id", handlers.UpdateMenuType)
+	adminMenuTypesRoute.Delete("/:id", handlers.DeleteMenuTypeByID)
 }
