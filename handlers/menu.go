@@ -394,8 +394,11 @@ func GetMenuTypeByID(c *fiber.Ctx) error {
 		})
 	}
 
-	var menuTypes *models.MenuType
-	result := database.DB.Where("id = ?", id).Find(menuTypes)
+	var menuType *models.MenuType
+	result := database.DB.
+		Where("id = ?", id).
+		Find(&menuType).
+		Limit(1)
 
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -412,7 +415,7 @@ func GetMenuTypeByID(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"err":  false,
-		"data": menuTypes,
+		"data": menuType,
 	})
 }
 
