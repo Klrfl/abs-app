@@ -27,8 +27,8 @@ func decodeToken(tokenString string, key string) (*jwt.Token, error) {
 }
 
 func getTokenString(c *fiber.Ctx) string {
-	if len(c.Get("Authorization")) != 0 {
-		return strings.Split(c.Get("Authorization"), " ")[1]
+	if tokenString := strings.Split(c.Get("Authorization"), " "); len(tokenString) == 2 {
+		return tokenString[1]
 	}
 	return c.Cookies("token")
 }
