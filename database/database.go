@@ -32,9 +32,9 @@ func Init() {
 
 	if err != nil {
 		log.Println("error when connecting to database")
+	} else {
+		log.Println("Successfully connected to database")
 	}
-
-	log.Println("Successfully connected to database")
 
 	err = DB.AutoMigrate(
 		&models.Menu{},
@@ -50,8 +50,9 @@ func Init() {
 
 	if err != nil {
 		log.Fatal("Failed to migrate database")
+	} else {
+		log.Println("Database successfully migrated")
 	}
-	log.Println("Database successfully migrated")
 
 	if err := Seeder(); err != nil {
 		log.Fatal("failed to seed data")
