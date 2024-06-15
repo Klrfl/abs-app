@@ -199,7 +199,7 @@ func GetUserForUser(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"err":     true,
-			"messgae": "user ID not valid",
+			"message": "user ID not valid",
 		})
 	}
 
@@ -219,8 +219,8 @@ func GetUserForUser(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{
-		"err":     true,
-		"message": existingUser,
+		"err":  false,
+		"data": existingUser,
 	})
 }
 
