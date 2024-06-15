@@ -12,6 +12,56 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
+func GetItemPrices(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	optionId := c.QueryInt("option_id", 0)
+	optionValueId := c.QueryInt("option_value_id", 0)
+	// quantity := c.QueryInt("option_value_id", 0)
+
+	if optionId == 0 || optionValueId == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "option_id and option_value_id is required",
+		})
+	}
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"err":     true,
+			"message": "error parsing menu ID",
+		})
+	}
+
+	var prices models.VariantValue
+	result := database.DB.
+		Preload("Option").
+		Preload("OptionValue").
+		Where("menu_id = ?", id).
+		Where("option_id = ?", optionId).
+		Where("option_value_id = ?", optionValueId).
+		Limit(1).
+		Find(&prices)
+
+	if result.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "error when finding prices",
+		})
+	}
+
+	if result.RowsAffected == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"err":     true,
+			"message": "prices not found",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"err":  false,
+		"data": prices,
+	})
+}
+
 func InsertNewPrices(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 
