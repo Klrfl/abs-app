@@ -1,0 +1,52 @@
+version: '3.9'
+
+services:
+  abs-app-db:
+    container_name: abs-app-db
+    hostname: abs-app-db
+    restart: always
+    networks:
+      - my-net
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=${DB_USER:-'abs_app'}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_NAME=${DB_NAME}
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  abs-app:
+    depends_on: 
+      - abs-app-db
+    container_name: abs-app
+    hostname: abs-app
+    image: abs-app:1.0.0
+    build: 
+      context: .
+    environment: 
+      - DB_USER=${DB_USER:-'abs_app'}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST:-db}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME}
+      - SECRET=${SECRET}
+
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    deploy:
+      restart_policy:
+        condition: on-failure
+    networks: 
+      - my-net 
+    ports:
+      - 80:8080
+
+
+volumes:
+  pgdata:
+
+networks:
+  my-net:
+    driver: bridge
