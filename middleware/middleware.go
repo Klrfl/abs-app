@@ -49,7 +49,7 @@ func ValidateUserJWT(c *fiber.Ctx) error {
 	}
 
 	if claims, ok := decodedToken.Claims.(jwt.MapClaims); ok {
-		c.Locals("user_id", claims["ID"])
+		c.Locals("user_id", claims["id"])
 		expiryTime := claims["exp"].(float64)
 
 		// TODO: refresh token

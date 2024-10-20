@@ -24,9 +24,9 @@ type Role struct {
 }
 
 type JWTClaim struct {
-	ID     uuid.UUID
-	Name   string
-	Email  string
-	RoleID int
+	ID     uuid.UUID `json:"id"`
+	Name   string    `json:"name"`
+	Email  string    `json:"email"`
+	RoleID int       `json:"role_id"`
 	jwt.RegisteredClaims
 }
